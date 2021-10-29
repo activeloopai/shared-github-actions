@@ -1,0 +1,121 @@
+name: Hub full tests
+on:
+  workflow_call:
+    inputs:
+      repo:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+      aws_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      gcp_project_id:
+        required: true
+      gcp_sa_key:
+        required: true
+      hub_password:
+        required: true
+      kaggle_username:
+        required: true
+      kaggle_key:
+        required: true
+
+jobs:
+  full-test:
+    name: Full test Python ${{ matrix.python-version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - 3.6
+          - 3.8
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macos-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.token }}
+      - name: Checkout the buH source code
+        uses: actions/checkout@v2
+        with:
+          path: buH
+          repository: activeloopai/buH
+          token: ${{ secrets.token }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/cache@v2
+        if: startsWith(runner.os, 'Linux')
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: actions/cache@v2
+        if: startsWith(runner.os, 'macOS')
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: actions/cache@v2
+        if: startsWith(runner.os, 'Windows')
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v1
+        with:
+          token: ${{ secrets.token }}
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: us-east-1
+      - name: Test AWS credentials validity
+        run: aws sts get-caller-identity
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: ${{ secrets.gcp_project_id }}
+          service_account_key: ${{ secrets.gcp_sa_key }}
+          export_default_credentials: true
+          credentials_file_path: "gcs.json"
+      - name: Test GCP credentials validity
+        run: gcloud info
+      - name: Install requirements
+        run: |
+          pip3 install --upgrade pip --user
+          pip3 install --upgrade setuptools
+          pip3 install -r hub/requirements/tests.txt
+          pip3 install -r hub/requirements/plugins.txt
+          pip3 install -r hub/requirements/common.txt
+          pip3 install -e buH
+          sh buH/buh/scripts/create_all.sh
+          pip3 install -e .
+        env:
+          BUGGER_OFF: "true"
+      - name: "Run tests"
+        run: |
+          python3 -m pytest --cov-report=xml --cov=./ --s3 --gcs --hub-cloud --ignore-glob=buH/*
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
