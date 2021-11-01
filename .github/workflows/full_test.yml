@@ -19,6 +19,8 @@ on:
         required: true
       gcp_sa_key:
         required: true
+      hub_username:
+        required: true
       hub_password:
         required: true
       kaggle_username:
@@ -116,6 +118,7 @@ jobs:
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
