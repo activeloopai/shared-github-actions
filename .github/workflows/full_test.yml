@@ -114,7 +114,7 @@ jobs:
           BUGGER_OFF: "true"
       - name: "Run tests"
         run: |
-          python3 -m pytest --cov-report=xml --cov=./ --s3 --gcs --hub-cloud --ignore-glob=buH/*
+          python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --hub-cloud --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
