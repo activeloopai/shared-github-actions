@@ -112,7 +112,7 @@ jobs:
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
-      - name: "Run tests"
+      - name: Run tests
         run: |
           python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --hub-cloud --ignore-glob=buH/*
         env:
@@ -122,3 +122,10 @@ jobs:
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+      - name: Upload coverage to codecov
+        if: startsWith(runner.os, 'Linux')
+        uses: codecov/codecov-action@v2
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
