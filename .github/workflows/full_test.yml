@@ -122,6 +122,16 @@ jobs:
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+      - name: Run backwards compatibility tests
+        run: |
+          python3 -m pytest buH/
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
       - name: Upload coverage to codecov
         if: startsWith(runner.os, 'Linux')
         uses: codecov/codecov-action@v2
