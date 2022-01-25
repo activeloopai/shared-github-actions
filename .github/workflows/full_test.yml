@@ -83,10 +83,17 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Setup FFmpeg
+      - name: Setup FFmpeg Windows
         uses: FedericoCarboni/setup-ffmpeg@v1
+        if: startsWith(runner.os, 'Windows')
         with:
           token: ${{ secrets.token }}
+      - name: Setup FFmpeg Linux
+        if: startsWith(runner.os, 'Linux')
+        run: sudo apt-get update && sudo apt-get install  -y ffmpeg
+      - name: Setup FFmpeg Mac
+        if: startsWith(runner.os, 'macOS')
+        run: brew install ffmpeg
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
