@@ -95,6 +95,7 @@ jobs:
         if: startsWith(runner.os, 'macOS')
         run: |
           brew install ffmpeg@4
+          brew link ffmpeg@4
           echo 'export PATH="/usr/local/opt/ffmpeg@4/bin:$PATH"' >> /Users/runner/.bash_profile
           export LDFLAGS="-L/usr/local/opt/ffmpeg@4/lib"
           export CPPFLAGS="-I/usr/local/opt/ffmpeg@4/include"
