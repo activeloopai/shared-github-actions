@@ -93,7 +93,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
       - name: Setup FFmpeg Mac
         if: startsWith(runner.os, 'macOS')
-        run: brew install ffmpeg
+        run: brew install ffmpeg@4
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
