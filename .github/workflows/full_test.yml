@@ -23,6 +23,12 @@ on:
         required: true
       oauth_client_secret:
         required: true
+      gdrive_client_secret:
+        required: true
+      gdrive_client_id:
+        required: true
+      gdrive_refresh_token:
+        required: true
       hub_username:
         required: true
       hub_password:
@@ -134,8 +140,9 @@ jobs:
           python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
-          CLIENT_ID: ${{ secrets.oauth_client_id }}
-          CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+          GDRIVE_CLIENT_ID: ${{ secrets.gdrive_client_id }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.gdrive_client_secret }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.gdrive_refresh_token }}
           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
