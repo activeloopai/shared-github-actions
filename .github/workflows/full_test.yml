@@ -129,10 +129,6 @@ jobs:
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
       - name: Run tests
         run: |
           python3 -m pytest --local -x --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
