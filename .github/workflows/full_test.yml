@@ -39,7 +39,7 @@ jobs:
     name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         python-version:
           - 3.6
@@ -126,14 +126,16 @@ jobs:
           pip3 install -r hub/requirements/tests.txt
           pip3 install -r hub/requirements/plugins.txt
           pip3 install -r hub/requirements/common.txt
-          pip3 install -e buH
-          sh buH/buh/scripts/create_all.sh
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
       - name: Run tests
         run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
+          python3 -m pytest --local -x --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
@@ -146,6 +148,9 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
       - name: Run backwards compatibility tests
         run: |
+          pip3 install -e buH
+          sh buH/buh/scripts/create_all.sh
+          pip3 install -e .
           python3 -m pytest buH/
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
