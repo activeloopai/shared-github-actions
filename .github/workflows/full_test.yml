@@ -146,7 +146,7 @@ jobs:
       - name: Run tests full
         if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
         run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
+          python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --gdrive --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
