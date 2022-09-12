@@ -126,14 +126,27 @@ jobs:
           pip3 install -r hub/requirements/plugins.txt
           pip3 install -r hub/requirements/common.txt
           pip3 install -r hub/requirements/tests.txt
-          pip3 install -e buH
-          sh buH/buh/scripts/create_all.sh
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
-      - name: Run tests
+      - name: Run tests fast fail
+        if: ${{ ( github.ref != 'refs/heads/main' && github.event_name == 'push' ) }}
         run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --s3 --gcs --gdrive --hub-cloud --ignore-glob=buH/*
+          python3 -m pytest --local -x --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
+          GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
+      - name: Run tests full
+        if: ${{ github.event_name == 'pull_request' || github.event_name == 'pull_request_target' }}
+        run: |
+          python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
@@ -146,6 +159,9 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
       - name: Run backwards compatibility tests
         run: |
+          pip3 install -e buH
+          sh buH/buh/scripts/create_all.sh
+          pip3 install -e .
           python3 -m pytest buH/
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
