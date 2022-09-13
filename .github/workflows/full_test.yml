@@ -144,7 +144,7 @@ jobs:
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
       - name: Run tests full
-        if: ${{ github.ref == 'refs/heads/main' && ( github.event_name == 'pull_request' || github.event_name == 'pull_request_target' ) }}
+        if: ${{ github.ref == 'refs/heads/main' && ( github.event_name == 'pull_request' || github.event_name == 'pull_request_target' || github.event_name == 'push' ) }}
         run: |
           python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
         env:
