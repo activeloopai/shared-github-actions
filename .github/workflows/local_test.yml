@@ -1,4 +1,4 @@
-name: Deep Lake/ local tests
+name: Deep Lake local tests
 on:
   workflow_call:
     inputs:
