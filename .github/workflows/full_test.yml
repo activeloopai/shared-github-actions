@@ -1,4 +1,4 @@
-name: Hub full tests
+name: Deep Lake/ full tests
 on:
   workflow_call:
     inputs:
@@ -68,21 +68,21 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - uses: actions/cache@v2
         if: startsWith(runner.os, 'macOS')
         with:
           path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - uses: actions/cache@v2
         if: startsWith(runner.os, 'Windows')
         with:
           path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{ hashFiles('hub/requirements/*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Setup FFmpeg Windows
@@ -123,9 +123,9 @@ jobs:
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
-          pip3 install -r hub/requirements/plugins.txt
-          pip3 install -r hub/requirements/common.txt
-          pip3 install -r hub/requirements/tests.txt
+          pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install -r deeplake/requirements/common.txt
+          pip3 install -r deeplake/requirements/tests.txt
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
