@@ -132,7 +132,7 @@ jobs:
       - name: Run tests fast fail
         if: ${{ github.ref != 'refs/heads/main' }}
         run: |
-          python3 -m pytest --local -x --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
+          python3 -m pytest --local -x --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
