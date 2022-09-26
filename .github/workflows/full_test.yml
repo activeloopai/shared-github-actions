@@ -146,7 +146,7 @@ jobs:
         run: |
           pip3 install -e buH
           sh buH/buh/scripts/create_all.sh
-          pip3 install -e .
+          pip3 install --upgrade --force-reinstall -e .
           python3 -m pytest buH/
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
