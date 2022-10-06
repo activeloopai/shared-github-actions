@@ -123,9 +123,9 @@ jobs:
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
-          pip3 install -r deeplake/requirements/plugins.txt
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
+          pip3 install -r deeplake/requirements/plugins.txt
           pip3 install -e .
         env:
           BUGGER_OFF: "true"
