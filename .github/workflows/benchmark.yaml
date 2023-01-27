@@ -1,0 +1,189 @@
+name: Deep Lake benchmarks
+on:
+  workflow_call:
+    inputs:
+      benchmark_source:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+      upload_result:
+        required: true
+        type: boolean
+    secrets:
+      benchmarks_aws_role_arn:
+        required: true
+      benchmarks-repo:
+        required: true
+      repo-token:
+        required: true
+      benchmarks_results_bucket:
+        required: true
+      slack_url:
+        required: true
+
+jobs:
+  start-benchmark-instances:
+    name: Start benchmark instances
+    runs-on: benchmarks_macos_intel
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.benchmarks_aws_role_arn }}
+          aws-region: us-east-1
+          mask-aws-account-id: true
+      - name: start benchmark instances
+        shell: bash
+        env:
+          INSTANCES: ${{ secrets.instances }}
+          AWS_REGION: us-west-2
+        run: python3 ~/GitHub/scripts/start_stop_ec2.py start
+  benchmark:
+    name: Runner ${{ matrix.node }} #- ${{ matrix.python-version }}
+    runs-on: "benchmarks_${{ matrix.node }}"
+    env:
+      NODE: ${{ matrix.node }}
+      
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - macos_intel
+          - linux_cpu
+          - linux_gpu
+          - linux_4_gpu
+        # python-version:
+        #   - 3.9
+    steps:
+      - name: Activate Conda environment
+        shell: bash
+        run: |
+          # >>> conda initialize >>>
+          __conda_setup="$('/Users/devops/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+          if [ $? -eq 0 ]; then
+              eval "$__conda_setup"
+          else
+              if [ -f "/Users/devops/anaconda3/etc/profile.d/conda.sh" ]; then
+                  . "/Users/devops/anaconda3/etc/profile.d/conda.sh"
+              else
+                  export PATH="/Users/devops/anaconda3/bin:$PATH"
+              fi
+          fi
+          unset __conda_setup
+          # <<< conda initialize <<<
+          conda activate ffcv
+
+      - name: Pull deeplake
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake
+          git pull
+          git checkout ${{ inputs.ref }}
+
+      - name: Install deeplake
+        run: |
+          python3.9 -m pip install --upgrade pip --user
+          python3.9 -m pip install --upgrade setuptools
+          python3.9 -m pip install -r deeplake/requirements/common.txt
+          python3.9 -m pip install -r deeplake/requirements/tests.txt
+          python3.9 -m pip install -r deeplake/requirements/plugins.txt
+          python3.9 -m pip install -e .[all]
+
+      - name: Extract branch name
+        id: extrac_branch
+        shell: bash
+        run: |
+          BRANCH=$(git branch --show-current)
+          echo "branch=${BRANCH##*/}" >> $GITHUB_OUTPUT
+
+      - name: Pull benchmarks repo
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
+          git pull
+
+      - name: Install benchmark requirements
+        shell: bash
+        run: |
+          python3.9 -m pip install -r requirements/requirements.txt
+
+      - name: Run benchmarks
+        shell: bash
+        run: |
+          python3 deeplake_benchmarks run_benchmarks.py "--${{ matrix.node }}"
+
+      - name: Download/Upload latest release benchmark result
+        shell: bash
+        run: |
+          aws s3 cp "s3://${{ secrets.benchmarks_results_bucket }}/results/${{ matrix.node }}/result.csv" ./result_latest.csv
+          if [ ${{ inputs.benchmark_source }} == 'release' ]
+          then
+            aws s3 cp ./result.csv "s3://${{ secrets.benchmarks_results_bucket }}/results/${{ matrix.node }}/result.csv"
+            aws s3 cp ./result.csv "s3://${{ secrets.benchmarks_results_bucket }}/results/${{ matrix.node }}/result_${{ steps.extract_branch.outputs.branch }}.csv"
+
+      - name: Generate benchmark reports
+        shell: bash
+        run: |
+          if [ ${{ inputs.benchmark_source }} == 'PR' ]
+          then
+            python3 scripts/generate_benchmark_report.py generate_markdown_report \
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}" \
+              result.csv \
+              result_latest.csv
+          else
+            python3 scripts/generate_benchmark_report.py generate_csv_report \
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}" \
+              result.csv \
+              result_latest.csv
+          fi
+
+      - name: Comment report on PR
+        if: inputs.benchmark_source == 'PR'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: "${{ matrix.node }}-${{ inputs.benchmark_source }}.md"
+          comment_tag: "${{ matrix.node }}-${{ inputs.benchmark_source }}"
+
+      - name: Upload benchmark reports
+        if: inputs.benchmark_source != 'PR'
+        env: 
+          RELASE_TAG: ${{ steps.extract_branch.outputs.branch }}
+          SLACK_URL: ${{ secrets.slack_url }}
+          
+        shell: bash
+        run: |
+          if [ ${{ inputs.benchmark_source }} == 'main' ]
+          then
+            export LINK=$(python3 scripts/gdrive.py update   \ 
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}.csv")
+          else 
+            export LINK=$(python3 scripts/gdrive.py update   \ 
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}.csv")
+
+            mv "${{ matrix.node }}-${{ inputs.benchmark_source }}.csv" \
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}_${RELASE_TAG}.csv"
+
+            python3 scripts/gdrive.py upload   \ 
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}_${RELASE_TAG}.csv" \
+              "${{ matrix.node }}-${{ inputs.benchmark_source }}"
+
+          python3.9 notify_slack.py "${LINK}" "{{ inputs.benchmark_source }}"
+
+  # stop-benchmark-instances:
+  #   name: Stop benchmark instances
+  #   runs-on: benchmarks_macos_intel
+  #   steps:
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: ${{ secrets.benchmarks_aws_role_arn }}
+  #         aws-region: us-east-1
+  #         mask-aws-account-id: true
+  #     - name: start benchmark instances
+  #       shell: bash
+  #       env:
+  #         INSTANCES: ${{ secrets.instances }}
+  #         AWS_REGION: us-west-2
+  #       run: python3 ~/GitHub/scripts/start_stop_ec2.py stop
