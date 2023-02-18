@@ -18,7 +18,7 @@ on:
         required: true
       activeloop_username:
         required: true
-      activeloop_pasword:
+      activeloop_password:
         required: true
 
 jobs:
@@ -87,7 +87,7 @@ jobs:
           then
             python3.9 -m pip install -r requirements/train.txt
           fi
-          activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_pasword }}
+          activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_password }}
 
       - name: Pull deeplake
         shell: bash
