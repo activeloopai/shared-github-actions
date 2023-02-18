@@ -1,0 +1,187 @@
+name: Deep Lake benchmarks
+on:
+  workflow_call:
+    inputs:
+      benchmark_event:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+    secrets:
+      benchmarks_aws_role_arn:
+        required: true
+      slack_url:
+        required: true
+      activeloop_username:
+        required: true
+      activeloop_pasword:
+        required: true
+
+jobs:
+  start-benchmark-instances:
+    name: Start benchmark instances
+    runs-on: benchmarks_macos_intel
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ secrets.benchmarks_aws_role_arn }}
+          mask-aws-account-id: true
+      - name: Pull repo
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
+          git checkout main
+          git pull
+      - name: start benchmark instances
+        shell: bash
+        env:
+          SLACK_URL: ${{ secrets.slack_url }}
+        run: python3 scripts/start_stop_ec2.py start
+  benchmark:
+    name: Runner ${{ matrix.node }} #- ${{ matrix.python-version }}
+    runs-on: "benchmarks_${{ matrix.node }}"
+    env:
+      NODE: ${{ matrix.node }}
+      SOURCE: ${{ inputs.benchmark_event }}
+      REF: ${{ inputs.ref }}
+      G_SHA: ${{ inputs.sha }}
+    strategy:
+      matrix:
+        node:
+          - macos_intel
+          - linux_cpu
+          # - linux_gpu
+          # - linux_4_gpu
+        # python-version:
+        #   - 3.9
+    steps:
+      - name: Activate Conda environment
+        if: contains(matrix.node, 'gpu')
+        shell: bash
+        run: |
+          conda activate ffcv
+
+      - name: Pull benchmarks repo
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
+          git pull
+      
+      - name: Create virtual environment
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks
+          python3.9 -m venv env
+
+      - name: Install benchmark requirements
+        shell: bash
+        run: |
+          . ~/GitHub/deeplake_benchmarks/env/bin/activate
+          python3.9 -m pip install -r requirements/requirements.txt
+          if [[ "${NODE}" =~ 'gpu' ]]
+          then
+            python3.9 -m pip install -r requirements/train.txt
+          fi
+          activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_pasword }}
+
+      - name: Pull deeplake
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake
+          git pull
+          git checkout ${{ inputs.ref }}
+
+      - name: Install deeplake
+        run: |
+          . ~/GitHub/deeplake_benchmarks/env/bin/activate
+          python3.9 -m pip install -U pip
+          python3.9 -m pip install -U setuptools
+          python3.9 -m pip install -e .[all]
+
+      - name: Extract branch name
+        if: inputs.benchmark_event == 'push'
+        id: extract_branch
+        shell: bash
+        run: |
+          BRANCH=$(git branch --show-current)
+          echo "branch=${BRANCH##*/}" >> $GITHUB_OUTPUT
+
+      - name: Run benchmarks
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
+          . ../env/bin/activate
+          python3.9 run_benchmarks.py --machine "${NODE}"
+      
+      - name: 'Upload results'
+        uses: actions/upload-artifact@v3
+        with:
+          name: results
+          path: results.csv
+          retention-days: 7
+
+      - name: Pull reports repo
+        shell: bash
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmark_reports
+          git checkout main
+          git pull
+          cd $OLDPWD
+
+      - name: Generate benchmark reports
+        shell: bash
+        run: |
+          python3 -m pip install -r requirements/scripts.txt
+          python3 scripts/report.py \
+            --type md \
+            --base-result "../deeplake_benchmark_reports/${NODE}/latest/results.csv" \
+            --new-result results.csv \
+            --output report.md
+
+          python3 scripts/report.py \
+            --type csv \
+            --base-result "../deeplake_benchmark_reports/${NODE}/latest/results.csv" \
+            --new-result results.csv \
+            --output report.csv
+
+      - name: Comment report on PR
+        if: inputs.benchmark_event == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: "./report.md"
+          comment_tag: "${NODE}-${SOURCE}"
+
+      - name: Update reports
+        if: inputs.benchmark_event != 'pull_request'
+        env: 
+          RELASE_TAG: ${{ steps.extract_branch.outputs.branch }}
+          SLACK_URL: ${{ secrets.slack_url }}
+        shell: bash
+        run: |
+          if [ "${RELASE_TAG}" == 'main' ]
+          then
+            cp -f report.md  "../deeplake_benchmark_reports/${NODE}/main/report.md"
+            cp -f report.md  "../deeplake_benchmark_reports/${NODE}/main/report-${SHA}.md"
+            cp -f report.csv "../deeplake_benchmark_reports/${NODE}/main/report.csv"
+            cp -f report.csv "../deeplake_benchmark_reports/${NODE}/main/report-${SHA}.csv"
+          else 
+            cp -f report.md   "../deeplake_benchmark_reports/${NODE}/latest/report.md"
+            cp -f report.csv  "../deeplake_benchmark_reports/${NODE}/latest/report.csv"
+            cp -f results.csv "../deeplake_benchmark_reports/${NODE}/latest/results.csv"\
+          
+            mkdir "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}"
+            cp -f report.md   "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/report.md"
+            cp -f report.csv  "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/report.csv"
+            cp -f results.csv "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/results.csv"
+          fi
+          
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmark_reports
+          git add .
+          git commit -m 'Update report for ${RELASE_TAG}'
+          git push origin main
+          python3.9 scripts/notify_slack.py
