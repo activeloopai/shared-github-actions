@@ -50,7 +50,7 @@ jobs:
     env:
       NODE: ${{ matrix.node }}
       SOURCE: ${{ inputs.benchmark_event }}
-      ref: ${{ inputs.ref }}
+      REF: ${{ inputs.ref }}
     strategy:
       fail-fast: false
       matrix:
@@ -97,12 +97,12 @@ jobs:
           cd ~/GitHub/deeplake_benchmarks/deeplake
           git checkout main
           git pull
-          git checkout ${G_SHA}
 
       - name: Install deeplake
         run: |
           . ~/GitHub/deeplake_benchmarks/env/bin/activate
           cd ~/GitHub/deeplake_benchmarks/deeplake
+          git checkout ${REF}
           python3.9 -m pip install -U pip
           python3.9 -m pip install -U setuptools
           python3.9 -m pip install -e .[all]
@@ -187,12 +187,17 @@ jobs:
             cp -f report.csv  "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/report.csv"
             cp -f results.csv "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/results.csv"
           fi
-          
-          rm report.* result* 
-          rm ../env
 
           cd ~/GitHub/deeplake_benchmarks/deeplake_benchmark_reports
           git add .
           git commit -m 'Update report for ${RELASE_TAG}'
           git push origin main
           python3.9 scripts/notify_slack.py
+
+      - name: Cleanup
+        if: always()
+        shell: bash
+        run: |
+          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/report.*
+          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/result* 
+          rm ~/GitHub/deeplake_benchmarks/env
