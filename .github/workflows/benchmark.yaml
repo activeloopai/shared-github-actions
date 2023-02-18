@@ -42,7 +42,10 @@ jobs:
         shell: bash
         env:
           SLACK_URL: ${{ secrets.slack_url }}
-        run: python3 scripts/start_stop_ec2.py start
+        run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
+          python3 scripts/start_stop_ec2.py start
+
   benchmark:
     name: Runner ${{ matrix.node }} #- ${{ matrix.python-version }}
     runs-on: "benchmarks_${{ matrix.node }}"
@@ -83,6 +86,7 @@ jobs:
         shell: bash
         run: |
           . ~/GitHub/deeplake_benchmarks/env/bin/activate
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
           python3.9 -m pip install -r requirements/requirements.txt
           if [[ "${NODE}" =~ 'gpu' ]]
           then
@@ -100,6 +104,7 @@ jobs:
       - name: Install deeplake
         run: |
           . ~/GitHub/deeplake_benchmarks/env/bin/activate
+          cd ~/GitHub/deeplake_benchmarks/deeplake
           python3.9 -m pip install -U pip
           python3.9 -m pip install -U setuptools
           python3.9 -m pip install -e .[all]
@@ -137,6 +142,7 @@ jobs:
       - name: Generate benchmark reports
         shell: bash
         run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks
           python3 -m pip install -r requirements/scripts.txt
           python3 scripts/report.py \
             --type md \
@@ -154,7 +160,7 @@ jobs:
         if: inputs.benchmark_event == 'pull_request'
         uses: thollander/actions-comment-pull-request@v2
         with:
-          filePath: "./report.md"
+          filePath: "~/GitHub/deeplake_benchmarks/deeplake_benchmarks/report.md"
           comment_tag: "${NODE}-${SOURCE}"
 
       - name: Update reports
@@ -164,6 +170,7 @@ jobs:
           SLACK_URL: ${{ secrets.slack_url }}
         shell: bash
         run: |
+          cd ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/
           if [ "${RELASE_TAG}" == 'main' ]
           then
             cp -f report.md  "../deeplake_benchmark_reports/${NODE}/main/report.md"
@@ -189,4 +196,3 @@ jobs:
           git commit -m 'Update report for ${RELASE_TAG}'
           git push origin main
           python3.9 scripts/notify_slack.py
-
