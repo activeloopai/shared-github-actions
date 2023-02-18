@@ -48,6 +48,7 @@ jobs:
 
   benchmark:
     name: Runner ${{ matrix.node }} #- ${{ matrix.python-version }}
+    needs: start-benchmark-instances
     runs-on: "benchmarks_${{ matrix.node }}"
     env:
       NODE: ${{ matrix.node }}
