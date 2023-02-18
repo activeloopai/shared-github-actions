@@ -94,7 +94,6 @@ jobs:
           then
             python3.9 -m pip install -r requirements/train.txt
           fi
-          activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_password }}
 
       - name: Pull deeplake
         shell: bash
@@ -110,6 +109,7 @@ jobs:
           python3.9 -m pip install -U pip
           python3.9 -m pip install -U setuptools
           python3.9 -m pip install -e .[all]
+          activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_password }}
 
       - name: Extract branch name
         if: inputs.benchmark_event == 'push'
