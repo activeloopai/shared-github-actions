@@ -5,7 +5,7 @@ on:
       benchmark_event:
         required: true
         type: string
-      sha:
+      ref:
         required: true
         type: string
     secrets:
@@ -50,8 +50,7 @@ jobs:
     env:
       NODE: ${{ matrix.node }}
       SOURCE: ${{ inputs.benchmark_event }}
-      REF: ${{ inputs.ref }}
-      G_SHA: ${{ inputs.sha }}
+      ref: ${{ inputs.ref }}
     strategy:
       fail-fast: false
       matrix:
@@ -98,7 +97,7 @@ jobs:
           cd ~/GitHub/deeplake_benchmarks/deeplake
           git checkout main
           git pull
-          git checkout ${{ inputs.sha }}
+          git checkout ${G_SHA}
 
       - name: Install deeplake
         run: |
