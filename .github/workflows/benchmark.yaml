@@ -181,8 +181,12 @@ jobs:
             cp -f results.csv "../deeplake_benchmark_reports/${NODE}/release-${RELASE_TAG}/results.csv"
           fi
           
+          rm report.* result* 
+          rm ../env
+
           cd ~/GitHub/deeplake_benchmarks/deeplake_benchmark_reports
           git add .
           git commit -m 'Update report for ${RELASE_TAG}'
           git push origin main
           python3.9 scripts/notify_slack.py
+
