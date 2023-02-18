@@ -199,5 +199,5 @@ jobs:
         shell: bash
         run: |
           rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/report.* || true
-          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/result*  | true
+          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/result*  || true
           rm ~/GitHub/deeplake_benchmarks/env || true
