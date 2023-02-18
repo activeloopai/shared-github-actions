@@ -30,6 +30,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
           role-to-assume: ${{ secrets.benchmarks_aws_role_arn }}
+          aws-region: us-east-1
           mask-aws-account-id: true
       - name: Pull repo
         shell: bash
