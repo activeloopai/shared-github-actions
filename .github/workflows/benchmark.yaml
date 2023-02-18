@@ -198,6 +198,6 @@ jobs:
         if: always()
         shell: bash
         run: |
-          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/report.*
-          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/result* 
-          rm ~/GitHub/deeplake_benchmarks/env
+          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/report.* || true
+          rm ~/GitHub/deeplake_benchmarks/deeplake_benchmarks/result*  | true
+          rm ~/GitHub/deeplake_benchmarks/env || true
