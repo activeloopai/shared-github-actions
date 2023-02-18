@@ -96,6 +96,7 @@ jobs:
         shell: bash
         run: |
           cd ~/GitHub/deeplake_benchmarks/deeplake
+          git checkout main
           git pull
           git checkout ${{ inputs.sha }}
 
