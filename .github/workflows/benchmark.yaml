@@ -106,6 +106,7 @@ jobs:
           python3.9 -m pip install -U pip
           python3.9 -m pip install -U setuptools
           python3.9 -m pip install -e .[all]
+          git checkout main
           activeloop login --username ${{ secrets.activeloop_username }} --password ${{ secrets.activeloop_password }}
 
       - name: Extract branch name
