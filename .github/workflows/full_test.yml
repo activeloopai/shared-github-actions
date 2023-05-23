@@ -218,6 +218,12 @@ jobs:
             credentials_file_path: "gcs.json"
         - name: Test GCP credentials validity
           run: gcloud info
+        - name: Azure login
+          uses: azure/login@v1
+          with:
+            client-id: ${{ secrets.azure_client_id }}
+            tenant-id: ${{ secrets.azure_tenant_id }}
+            subscription-id: ${{ secrets.azure_subscription_id }}
         - name: Install requirements
           run: |
             pip3 install --upgrade pip --user
