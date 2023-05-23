@@ -33,6 +33,12 @@ on:
         required: true
       kaggle_key:
         required: true
+      azure_client_id:
+        required: true
+      azure_tenant_id: 
+        required: true
+      azure_subscription_id:
+        required: true
 
 jobs:
   full-test:
@@ -104,6 +110,12 @@ jobs:
           credentials_file_path: "gcs.json"
       - name: Test GCP credentials validity
         run: gcloud info
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.azure_client_id }}
+          tenant-id: ${{ secrets.azure_tenant_id }}
+          subscription-id: ${{ secrets.azure_subscription_id }
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
@@ -116,7 +128,8 @@ jobs:
           BUGGER_OFF: "true"
       - name: Run tests full
         run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
+          # python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --gdrive --ignore-glob=buH/*
+          python3 -m pytest --local --cov-report=xml --cov=./ --azure --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
