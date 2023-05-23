@@ -165,6 +165,7 @@ jobs:
   full-test-macos:
       name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
       runs-on: ${{ matrix.os }}
+      environment: production
       strategy:
         fail-fast: false
         matrix:
