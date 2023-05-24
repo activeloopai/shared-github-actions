@@ -35,16 +35,17 @@ on:
         required: true
       azure_client_id:
         required: true
-      azure_tenant_id: 
+      azure_client_secret:
         required: true
       azure_subscription_id:
+        required: true
+      azure_tenant_id: 
         required: true
 
 jobs:
   full-test:
     name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    environment: production
     strategy:
       fail-fast: false
       matrix:
@@ -114,9 +115,7 @@ jobs:
       - name: Azure login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.azure_client_id }}
-          tenant-id: ${{ secrets.azure_tenant_id }}
-          subscription-id: ${{ secrets.azure_subscription_id }}
+          creds: '{"clientId":"${{ secrets.azure_client_id }}","clientSecret":"${{ secrets.azure_client_secret }}","subscriptionId":"${{ secrets.azure_subscription_id }}","tenantId":"${{ secrets.azure_tenant_id }}"}'
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
@@ -165,7 +164,6 @@ jobs:
   full-test-macos:
       name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
       runs-on: ${{ matrix.os }}
-      environment: production
       strategy:
         fail-fast: false
         matrix:
@@ -223,9 +221,7 @@ jobs:
         - name: Azure login
           uses: azure/login@v1
           with:
-            client-id: ${{ secrets.azure_client_id }}
-            tenant-id: ${{ secrets.azure_tenant_id }}
-            subscription-id: ${{ secrets.azure_subscription_id }}
+            creds: '{"clientId":"${{ secrets.azure_client_id }}","clientSecret":"${{ secrets.azure_client_secret }}","subscriptionId":"${{ secrets.azure_subscription_id }}","tenantId":"${{ secrets.azure_tenant_id }}"}'
         - name: Install requirements
           run: |
             pip3 install --upgrade pip --user
