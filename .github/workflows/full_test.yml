@@ -94,12 +94,20 @@ jobs:
           role-duration-seconds: 21600
           role-session-name: deeplake-${{ github.sha }}
       - name: Authenticate to Google Cloud
+        id: google-auth
         uses: google-github-actions/auth@v1.1.1
         with:
           workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
           service_account: ${{ secrets.gcp_sa }}
           create_credentials_file: true
           export_environment_variables: true
+          token_format: 'access_token'
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3.16
+        env:
+          G_AUTH_PATH: ${{ steps.google-auth.outputs }}
+        with:
+          limit-access-to-actor: true
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
@@ -112,7 +120,7 @@ jobs:
           BUGGER_OFF: "true"
       - name: Run tests full
         run: |
-          python3 -m pytest --cov-report=xml --cov=./ --s3 --gcs --ignore-glob=buH/*
+          python3 -m pytest --cov-report=xml --cov=./ --gcs --ignore-glob=buH/*
         env:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
