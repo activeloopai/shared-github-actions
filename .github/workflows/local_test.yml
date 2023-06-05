@@ -1,4 +1,5 @@
 name: Deep Lake local tests
+
 on:
   workflow_call:
     inputs:
@@ -11,6 +12,7 @@ on:
     secrets:
       token:
         required: true
+
 jobs:
   test:
     name: Local test Python ${{ matrix.python-version }} - ${{ matrix.os }}
@@ -19,10 +21,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
+          - "3.8"
+          - "3.9"
+          - "3.10"
+          - "3.11"
         os:
           - ubuntu-latest
           - windows-latest
@@ -83,7 +85,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - '3.9'
+          - "3.9"
         os:
           - macos-latest
     steps:
