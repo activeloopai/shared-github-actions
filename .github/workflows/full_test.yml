@@ -102,7 +102,7 @@ jobs:
           export_environment_variables: true
           token_format: 'id_token'
           id_token_include_email: true
-          id_token_audience: "deeplake-tests"
+          id_token_audience: "https://iam.googleapis.com/projects/177010225557/locations/global/workloadIdentityPools/github-pool/providers/github-provider"
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
