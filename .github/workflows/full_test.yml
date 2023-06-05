@@ -40,10 +40,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - '3.8'
+          # - '3.8'
           - '3.9'
-          - '3.10'
-          - '3.11'
+          # - '3.10'
+          # - '3.11'
         os:
           - ubuntu-latest
           - windows-latest
@@ -95,7 +95,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1.1.1
         with:
-          workload_identity_provider: ${{ secrets.workload_identity_provider }}
+          workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
           service_account: ${{ secrets.gcp_sa }}
           create_credentials_file: true
           export_environment_variables: true
@@ -197,7 +197,7 @@ jobs:
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v1.1.1
           with:
-            workload_identity_provider: ${{ secrets.workload_identity_provider }}
+            workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
             service_account: ${{ secrets.gcp_sa }}
             create_credentials_file: true
             export_environment_variables: true
