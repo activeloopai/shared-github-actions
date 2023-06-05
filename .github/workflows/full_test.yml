@@ -14,9 +14,7 @@ on:
         required: true
       aws_role_arn:
         required: true
-      gcp_workload_identity_provider:
-        required: true
-      gcp_sa:
+      gcp_sa_credentials_json:
         required: true
       oauth_client_id:
         required: true
@@ -96,13 +94,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1.1.1
         with:
-          workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
-          service_account: ${{ secrets.gcp_sa }}
-          create_credentials_file: true
-          export_environment_variables: true
-          token_format: 'id_token'
-          id_token_include_email: true
-          id_token_audience: 'https://iam.googleapis.com/${{ secrets.gcp_workload_identity_provider }}'
+          credentials_json: ${{ secrets.gcp_sa_credentials_json }}
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
@@ -195,13 +187,7 @@ jobs:
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1.1.1
         with:
-          workload_identity_provider: ${{ secrets.gcp_workload_identity_provider }}
-          service_account: ${{ secrets.gcp_sa }}
-          create_credentials_file: true
-          export_environment_variables: true
-          token_format: 'id_token'
-          id_token_include_email: true
-          id_token_audience: 'https://iam.googleapis.com/${{ secrets.gcp_workload_identity_provider }}'
+          credentials_json: ${{ secrets.gcp_sa_credentials_json }}
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
