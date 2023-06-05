@@ -100,8 +100,9 @@ jobs:
           service_account: ${{ secrets.gcp_sa }}
           create_credentials_file: true
           export_environment_variables: true
-          token_format: 'access_token'
-          access_token_lifetime: '21600s'
+          token_format: 'id_token'
+          id_token_include_email: true
+          id_token_audience: "deeplake-tests"
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
