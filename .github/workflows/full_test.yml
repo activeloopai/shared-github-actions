@@ -128,7 +128,7 @@ jobs:
           BUGGER_OFF: "true"
       - name: Run tests full
         run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs  --azure  --gdrive --ignore-glob=buH/*
+          python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
@@ -233,7 +233,7 @@ jobs:
             BUGGER_OFF: "true"
         - name: Run tests full
           run: |
-            python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs  --azure  --gdrive --ignore-glob=buH/*
+            python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
           env:
             GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
             GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
