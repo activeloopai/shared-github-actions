@@ -211,7 +211,6 @@ jobs:
           run: |
             python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
           env:
-            GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
             GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
             GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
             GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
