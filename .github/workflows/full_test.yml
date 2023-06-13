@@ -42,7 +42,7 @@ jobs:
       matrix:
         python-version:
           - '3.8'
-          - "3.9"
+          - '3.9'
           - '3.10'
           - '3.11'
         os:
@@ -97,6 +97,8 @@ jobs:
         uses: google-github-actions/auth@v1.1.1
         with:
           credentials_json: ${{ secrets.gcp_sa_credentials_json }}
+          create_credentials_file: true
+          export_environment_variables: true
       - name: Azure login
         uses: azure/login@v1
         with:
@@ -194,6 +196,8 @@ jobs:
           uses: google-github-actions/auth@v1.1.1
           with:
             credentials_json: ${{ secrets.gcp_sa_credentials_json }}
+            create_credentials_file: true
+            export_environment_variables: true
         - name: Azure login
           uses: azure/login@v1
           with:
