@@ -1,4 +1,5 @@
 name: Deep Lake full tests
+
 on:
   workflow_call:
     inputs:
@@ -11,13 +12,9 @@ on:
     secrets:
       token:
         required: true
-      aws_key_id:
+      aws_role_arn:
         required: true
-      aws_secret_access_key:
-        required: true
-      gcp_project_id:
-        required: true
-      gcp_sa_key:
+      gcp_sa_credentials_json:
         required: true
       oauth_client_id:
         required: true
@@ -33,13 +30,7 @@ on:
         required: true
       kaggle_key:
         required: true
-      azure_client_id:
-        required: true
-      azure_client_secret:
-        required: true
-      azure_subscription_id:
-        required: true
-      azure_tenant_id: 
+      azure_creds_json:
         required: true
 
 jobs:
@@ -96,26 +87,22 @@ jobs:
         if: startsWith(runner.os, 'Linux')
         run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id: ${{ secrets.aws_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          role-to-assume: ${{ secrets.aws_role_arn }}
           aws-region: us-east-1
-      - name: Test AWS credentials validity
-        run: aws sts get-caller-identity
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+          role-duration-seconds: 21600
+          role-session-name: deeplake-${{ github.sha }}
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1.1.1
         with:
-          project_id: ${{ secrets.gcp_project_id }}
-          service_account_key: ${{ secrets.gcp_sa_key }}
-          export_default_credentials: true
-          credentials_file_path: "gcs.json"
-      - name: Test GCP credentials validity
-        run: gcloud info
+          credentials_json: ${{ secrets.gcp_sa_credentials_json }}
+          create_credentials_file: true
+          export_environment_variables: true
       - name: Azure login
         uses: azure/login@v1
         with:
-          creds: '{"clientId":"${{ secrets.azure_client_id }}","clientSecret":"${{ secrets.azure_client_secret }}","subscriptionId":"${{ secrets.azure_subscription_id }}","tenantId":"${{ secrets.azure_tenant_id }}"}'
+          creds: ${{ secrets.azure_creds_json }}
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
@@ -130,7 +117,6 @@ jobs:
         run: |
           python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
@@ -146,7 +132,6 @@ jobs:
           pip3 install --upgrade --force-reinstall -e .
           python3 -m pytest buH/
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
@@ -201,26 +186,22 @@ jobs:
             export CPPFLAGS="-I/usr/local/opt/ffmpeg@4/include"
             export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
         - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v1-node16
+          uses: aws-actions/configure-aws-credentials@v2
           with:
-            aws-access-key-id: ${{ secrets.aws_key_id }}
-            aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+            role-to-assume: ${{ secrets.aws_role_arn }}
             aws-region: us-east-1
-        - name: Test AWS credentials validity
-          run: aws sts get-caller-identity
-        - name: Set up Cloud SDK
-          uses: google-github-actions/setup-gcloud@v0
+            role-duration-seconds: 21600
+            role-session-name: deeplake-${{ github.sha }}
+        - name: Authenticate to Google Cloud
+          uses: google-github-actions/auth@v1.1.1
           with:
-            project_id: ${{ secrets.gcp_project_id }}
-            service_account_key: ${{ secrets.gcp_sa_key }}
-            export_default_credentials: true
-            credentials_file_path: "gcs.json"
-        - name: Test GCP credentials validity
-          run: gcloud info
+            credentials_json: ${{ secrets.gcp_sa_credentials_json }}
+            create_credentials_file: true
+            export_environment_variables: true
         - name: Azure login
           uses: azure/login@v1
           with:
-            creds: '{"clientId":"${{ secrets.azure_client_id }}","clientSecret":"${{ secrets.azure_client_secret }}","subscriptionId":"${{ secrets.azure_subscription_id }}","tenantId":"${{ secrets.azure_tenant_id }}"}'
+            creds: ${{ secrets.azure_creds_json }}
         - name: Install requirements
           run: |
             pip3 install --upgrade pip --user
@@ -235,7 +216,6 @@ jobs:
           run: |
             python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
           env:
-            GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
             GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
             GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
             GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
@@ -251,7 +231,6 @@ jobs:
             pip3 install --upgrade --force-reinstall -e .
             python3 -m pytest buH/
           env:
-            GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcs.json
             ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
             ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
             ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
