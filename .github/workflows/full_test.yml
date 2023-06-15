@@ -79,7 +79,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Setup FFmpeg Windows
-        uses: FedericoCarboni/setup-ffmpeg@v1
+        uses: FedericoCarboni/setup-ffmpeg@v2
         if: startsWith(runner.os, 'Windows')
         with:
           token: ${{ secrets.token }}
