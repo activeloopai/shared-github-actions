@@ -140,10 +140,9 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
       - name: SonarCloud Scan
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10' && env.sonar_token != ''
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10' && env.SONAR_TOKEN != ''
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          sonar_token: ${{ secrest.sonar_token }}
           GITHUB_TOKEN: ${{ secrets.token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
 
