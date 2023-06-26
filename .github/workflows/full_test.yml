@@ -32,6 +32,8 @@ on:
         required: true
       azure_creds_json:
         required: true
+      sonar_token: 
+        required: false
 
 jobs:
   full-test:
@@ -54,16 +56,20 @@ jobs:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.token }}
+          fetch-depth: 0
+
       - name: Checkout the buH source code
         uses: actions/checkout@v3
         with:
           path: buH
           repository: activeloopai/buH
           token: ${{ secrets.token }}
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
       - uses: actions/cache@v3
         if: startsWith(runner.os, 'Linux')
         with:
@@ -71,6 +77,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
       - uses: actions/cache@v3
         if: startsWith(runner.os, 'Windows')
         with:
@@ -78,14 +85,17 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
       - name: Setup FFmpeg Windows
         uses: FedericoCarboni/setup-ffmpeg@v2
         if: startsWith(runner.os, 'Windows')
         with:
           token: ${{ secrets.token }}
+
       - name: Setup FFmpeg Linux
         if: startsWith(runner.os, 'Linux')
         run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -93,12 +103,14 @@ jobs:
           aws-region: us-east-1
           role-duration-seconds: 21600
           role-session-name: deeplake-${{ github.sha }}
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1.1.1
         with:
           credentials_json: ${{ secrets.gcp_sa_credentials_json }}
           create_credentials_file: true
           export_environment_variables: true
+
       - name: Azure login
         uses: azure/login@v1
         with:
@@ -113,6 +125,7 @@ jobs:
           pip3 install -e .[all]
         env:
           BUGGER_OFF: "true"
+
       - name: Run tests full
         run: |
           python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
@@ -125,6 +138,14 @@ jobs:
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
+      - name: SonarCloud Scan
+        if: matrix.os == 'ubuntu-latest' && matrix.python_version == '3.10' && secrets.sonar_token
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.token }}
+          SONAR_TOKEN: ${{ secrets.sonar_token }}
+
       - name: Run backwards compatibility tests
         run: |
           pip3 install -e buH
@@ -137,6 +158,7 @@ jobs:
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
       - name: Upload coverage to codecov
         if: startsWith(runner.os, 'Linux')
         uses: codecov/codecov-action@v2
@@ -161,22 +183,26 @@ jobs:
             repository: ${{ inputs.repo }}
             ref: ${{ inputs.ref }}
             token: ${{ secrets.token }}
+
         - name: Checkout the buH source code
           uses: actions/checkout@v3
           with:
             path: buH
             repository: activeloopai/buH
             token: ${{ secrets.token }}
+
         - name: Set up Python ${{ matrix.python-version }}
           uses: actions/setup-python@v4
           with:
             python-version: ${{ matrix.python-version }}
+
         - uses: actions/cache@v3
           with:
             path: ~/Library/Caches/pip
             key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
             restore-keys: |
               ${{ runner.os }}-pip-
+
         - name: Setup FFmpeg Mac
           run: |
             brew install ffmpeg@4
@@ -185,6 +211,7 @@ jobs:
             export LDFLAGS="-L/usr/local/opt/ffmpeg@4/lib"
             export CPPFLAGS="-I/usr/local/opt/ffmpeg@4/include"
             export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
+
         - name: Configure AWS Credentials
           uses: aws-actions/configure-aws-credentials@v2
           with:
@@ -192,12 +219,14 @@ jobs:
             aws-region: us-east-1
             role-duration-seconds: 21600
             role-session-name: deeplake-${{ github.sha }}
+
         - name: Authenticate to Google Cloud
           uses: google-github-actions/auth@v1.1.1
           with:
             credentials_json: ${{ secrets.gcp_sa_credentials_json }}
             create_credentials_file: true
             export_environment_variables: true
+
         - name: Azure login
           uses: azure/login@v1
           with:
@@ -212,6 +241,7 @@ jobs:
             pip3 install -e .[all]
           env:
             BUGGER_OFF: "true"
+
         - name: Run tests full
           run: |
             python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
@@ -224,6 +254,7 @@ jobs:
             ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
             KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
             KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
         - name: Run backwards compatibility tests
           run: |
             pip3 install -e buH
