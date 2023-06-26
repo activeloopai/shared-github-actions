@@ -127,8 +127,10 @@ jobs:
           BUGGER_OFF: "true"
 
       - name: Run tests full
+        id: tests
         run: |
           python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
+        continue-on-error: true
         env:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
@@ -145,6 +147,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
+      
+      - name: Fail if tests are failed
+        if: steps.tests.outcome != 'success'
+        run: |
+          exit 1
 
       - name: Run backwards compatibility tests
         run: |
