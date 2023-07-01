@@ -9,6 +9,9 @@ on:
       ref:
         required: true
         type: string
+      matrix:
+        type: string
+        required: true
     secrets:
       token:
         required: true
@@ -41,15 +44,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        python-version:
-          - '3.8'
-          - '3.9'
-          - '3.10'
-          - '3.11'
-        os:
-          - ubuntu-latest
-          - windows-latest
+      matrix: ${{ fromJSON(inputs.matrix) }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -181,7 +176,7 @@ jobs:
         fail-fast: false
         matrix:
           python-version:
-            - '3.9'
+            - '3.10'
           os:
             - macos-latest
       steps:
