@@ -264,7 +264,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: buH
-          ref: cache_datasets # Remove after merged
           repository: activeloopai/buH
           token: ${{ secrets.token }}
           fetch-depth: 0
