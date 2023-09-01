@@ -9,7 +9,7 @@ on:
       ref:
         required: true
         type: string
-      matrix:
+      testMatrix:
         type: string
         required: true
     secrets:
@@ -35,16 +35,223 @@ on:
         required: true
       azure_creds_json:
         required: true
-      sonar_token: 
+      sonar_token:
         required: false
 
 jobs:
-  full-test:
-    name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
+  test:
+    name: Py${{ matrix.python-version }} | ${{ matrix.os }} | ${{ matrix.storage }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 150
+    env:
+      BUGGER_OFF: "true"
+
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(inputs.matrix) }}
+      matrix: ${{ fromJSON(inputs.testMatrix) }}
+    steps:
+      - name: Setup
+        shell: python
+        run: |
+          import os
+          
+          with open(os.environ.get("GITHUB_ENV"), "a") as file:
+              file.write("matrix_storage_filename=%s" % "${{ matrix.storage }}".replace(" ","").replace("--", "_")[1:])
+
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.token }}
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: deeplake/requirements/*.txt
+
+      #### Set up ffmpeg
+      - name: Setup FFmpeg (windows)
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        if: startsWith(runner.os, 'Windows')
+        with:
+          token: ${{ secrets.token }}
+
+      - name: Setup FFmpeg (linux)
+        if: startsWith(runner.os, 'Linux')
+        run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
+
+      - name: Setup FFmpeg (mac)
+        if: startsWith(runner.os, 'Mac')
+        run: |
+          brew install ffmpeg@4
+          brew link ffmpeg@4
+          echo 'export PATH="/usr/local/opt/ffmpeg@4/bin:$PATH"' >> /Users/runner/.bash_profile
+          export LDFLAGS="-L/usr/local/opt/ffmpeg@4/lib"
+          export CPPFLAGS="-I/usr/local/opt/ffmpeg@4/include"
+          export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
+
+      ### Setup authentication/credentials
+      - name: Authenticate (aws)
+        if: contains(matrix.storage, 's3') || contains(matrix.storage, 's3path')
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.aws_role_arn }}
+          aws-region: us-east-1
+          role-duration-seconds: 21600
+          role-session-name: deeplake-${{ github.sha }}
+
+      - name: Authenticate to Google Cloud
+        if: contains(matrix.storage, 'gcs')
+        uses: google-github-actions/auth@v1.1.1
+        with:
+          credentials_json: ${{ secrets.gcp_sa_credentials_json }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Azure login
+        if: contains(matrix.storage, 'azure')
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure_creds_json }}
+
+      - name: Install requirements
+        run: |
+          pip3 install --upgrade pip --user
+          pip3 install --upgrade setuptools
+          pip3 install -r deeplake/requirements/common.txt
+          pip3 install -r deeplake/requirements/tests.txt
+          pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install --upgrade libdeeplake
+          pip3 install -e .[all]
+
+      - name: Run fast tests
+        id: fast-tests
+        timeout-minutes: 15
+        run: |
+          coverage run --data-file=fast.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=fast.results.xml --capture=sys -o junit_logging=all -m "not slow and not flaky" --timeout=60  --profile  --pstats-dir=fast.prof
+        env:
+          DEEPLAKE_PYTEST_ENABLED: true
+          GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
+      - name: Run slow tests
+        id: slow-tests
+        timeout-minutes: 90
+        run: |
+          coverage run --data-file=slow.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=slow.results.xml --capture=sys -o junit_logging=all -m "slow and not flaky" --profile --pstats-dir=slow.prof
+        env:
+          DEEPLAKE_PYTEST_ENABLED: true
+          GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
+      - name: Process Results
+        if: always()
+        run: |
+          tar -czf fast.prof.tar.gz fast.prof || true
+          tar -czf slow.prof.tar.gz slow.prof || true
+
+      - name: Save Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-py${{ matrix.python-version }}-${{ matrix.os }}-${{ env.matrix_storage_filename }}_${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            fast.results.xml
+            slow.results.xml
+            fast.coverage
+            slow.coverage
+            *.prof.tar.gz
+
+  flaky-test:
+    name: Flaky Tests
+    runs-on: ubuntu-latest
+    env:
+      BUGGER_OFF: "true"
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.token }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: deeplake/requirements/*.txt
+
+      - name: Install requirements
+        run: |
+          pip3 install --upgrade pip --user
+          pip3 install --upgrade setuptools
+          pip3 install -r deeplake/requirements/common.txt
+          pip3 install -r deeplake/requirements/tests.txt
+          pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install --upgrade libdeeplake
+          pip3 install -e .[all]
+
+      - name: Run flaky tests
+        id: flaky-tests
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 3
+          shell: bash
+          # Retry seems to only check the last command's exit code, so need to have just one command
+          command: |
+            coverage run --data-file=flaky.coverage --omit="test_*.py" -m pytest --local --hub-cloud --s3 --junit-xml=flaky.results.xml --capture=sys -o junit_logging=all -m "flaky" --profile  --pstats-dir=flaky.prof
+
+        env:
+          DEEPLAKE_PYTEST_ENABLED: true
+          GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
+          GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+          GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
+          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+          KAGGLE_KEY: ${{ secrets.kaggle_key }}
+
+      - name: Process Results
+        if: always()
+        run: |
+          tar -czf flaky.prof.tar.gz flaky.prof
+
+      - name: Save Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-flaky_${{ github.run_number }}-${{ github.run_attempt }}
+          path: |
+            flaky.results.xml
+            flaky.coverage
+            flaky.prof.tar.gz
+
+  buh-test:
+    name: Backwards Compatibility Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      BUGGER_OFF: "true"
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -59,213 +266,115 @@ jobs:
           path: buH
           repository: activeloopai/buH
           token: ${{ secrets.token }}
+          fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
+      # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
+      - name: Cache datasets_clean
+        uses: actions/cache@v3
+        with:
+          path: datasets_clean/*
+          key: buH-datasets-clean
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: deeplake/requirements/*.txt
 
-      - uses: actions/cache@v3
-        if: startsWith(runner.os, 'Linux')
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - uses: actions/cache@v3
-        if: startsWith(runner.os, 'Windows')
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Setup FFmpeg Windows
-        uses: FedericoCarboni/setup-ffmpeg@v2
-        if: startsWith(runner.os, 'Windows')
-        with:
-          token: ${{ secrets.token }}
-
-      - name: Setup FFmpeg Linux
-        if: startsWith(runner.os, 'Linux')
-        run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.aws_role_arn }}
-          aws-region: us-east-1
-          role-duration-seconds: 21600
-          role-session-name: deeplake-${{ github.sha }}
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1.1.1
-        with:
-          credentials_json: ${{ secrets.gcp_sa_credentials_json }}
-          create_credentials_file: true
-          export_environment_variables: true
-
-      - name: Azure login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.azure_creds_json }}
-      - name: Install requirements
+      - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install --upgrade libdeeplake
           pip3 install -e .[all]
-        env:
-          BUGGER_OFF: "true"
+          pip3 install -e buH
 
-      - name: Run tests full
-        id: tests
-        run: |
-          python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
-        continue-on-error: true
+      - name: Create Datasets
+        run: buH/buh/scripts/create_all.sh
+
+      - name: Cleanup Libraries
+        run: pip3 install --upgrade --force-reinstall -e .
+
+      - name: Run backwards compatibility tests
+        run:  python3 -m pytest --junitxml=buh.results.xml --capture=sys -o junit_logging=all buH/
         env:
-          GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
-          GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
-          GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
+      # With the worked-on dataset plus the original clean, we can run out of disk space by the time we archive the results
+      - name: Cleanup Datasets
+        run: rm -rf datasets
+
+      - name: Save Test Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-backwards-compat_${{ github.run_attempt }}
+          path: |
+            buh.results.xml
+
+  report:
+    name: Final Testing and Reporting
+    needs: [test, buh-test, flaky-test]
+    runs-on: ubuntu-latest
+    if: always() && needs.test.result != 'cancelled' && needs.buh-test.result != 'cancelled'
+    env:
+      BUGGER_OFF: "true"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.token }}
+          fetch-depth: 0
+
+      - name: Download Test Results
+        uses: actions/download-artifact@v3
+        with:
+          path: results
+
+#      - name: Annotate with Test Results
+#        uses: EnricoMi/publish-unit-test-result-action@v2
+#        with:
+#          files:  results/test-results-*/*.results.xml
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always()
+        with:
+          report_paths: results/test-results-*/*.results.xml
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: deeplake/requirements/*.txt
+
+      - name: Merge coverage data
+        run: |
+          pip3 install coverage[toml]
+          find results -name "*.coverage" | xargs python3 -m coverage combine --keep --append --data-file=total.coverage
+          python3 -m coverage xml --data-file=total.coverage -o total.coverage.xml
+          sed -i 's/coverage.xml/total.coverage.xml/' sonar-project.properties
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./total.coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+
       - name: SonarCloud Scan
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.10' && env.SONAR_TOKEN != ''
+        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
-      
-      - name: Fail if tests are failed
-        if: steps.tests.outcome != 'success'
-        run: |
-          exit 1
-
-      - name: Run backwards compatibility tests
-        run: |
-          pip3 install -e buH
-          sh buH/buh/scripts/create_all.sh
-          pip3 install --upgrade --force-reinstall -e .
-          python3 -m pytest buH/
-        env:
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
-          ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
-          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-          KAGGLE_KEY: ${{ secrets.kaggle_key }}
-
-      - name: Upload coverage to codecov
-        if: startsWith(runner.os, 'Linux')
-        uses: codecov/codecov-action@v2
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          env_vars: OS,PYTHON
-
-  full-test-macos:
-      name: Python ${{ matrix.python-version }} - ${{ matrix.os }}
-      runs-on: ${{ matrix.os }}
-      strategy:
-        fail-fast: false
-        matrix:
-          python-version:
-            - '3.10'
-          os:
-            - macos-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            repository: ${{ inputs.repo }}
-            ref: ${{ inputs.ref }}
-            token: ${{ secrets.token }}
-
-        - name: Checkout the buH source code
-          uses: actions/checkout@v3
-          with:
-            path: buH
-            repository: activeloopai/buH
-            token: ${{ secrets.token }}
-
-        - name: Set up Python ${{ matrix.python-version }}
-          uses: actions/setup-python@v4
-          with:
-            python-version: ${{ matrix.python-version }}
-
-        - uses: actions/cache@v3
-          with:
-            path: ~/Library/Caches/pip
-            key: ${{ runner.os }}-pip-${{ hashFiles('deeplake/requirements/*.txt') }}
-            restore-keys: |
-              ${{ runner.os }}-pip-
-
-        - name: Setup FFmpeg Mac
-          run: |
-            brew install ffmpeg@4
-            brew link ffmpeg@4
-            echo 'export PATH="/usr/local/opt/ffmpeg@4/bin:$PATH"' >> /Users/runner/.bash_profile
-            export LDFLAGS="-L/usr/local/opt/ffmpeg@4/lib"
-            export CPPFLAGS="-I/usr/local/opt/ffmpeg@4/include"
-            export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
-
-        - name: Configure AWS Credentials
-          uses: aws-actions/configure-aws-credentials@v2
-          with:
-            role-to-assume: ${{ secrets.aws_role_arn }}
-            aws-region: us-east-1
-            role-duration-seconds: 21600
-            role-session-name: deeplake-${{ github.sha }}
-
-        - name: Authenticate to Google Cloud
-          uses: google-github-actions/auth@v1.1.1
-          with:
-            credentials_json: ${{ secrets.gcp_sa_credentials_json }}
-            create_credentials_file: true
-            export_environment_variables: true
-
-        - name: Azure login
-          uses: azure/login@v1
-          with:
-            creds: ${{ secrets.azure_creds_json }}
-        - name: Install requirements
-          run: |
-            pip3 install --upgrade pip --user
-            pip3 install --upgrade setuptools
-            pip3 install -r deeplake/requirements/common.txt
-            pip3 install -r deeplake/requirements/tests.txt
-            pip3 install -r deeplake/requirements/plugins.txt
-            pip3 install -e .[all]
-          env:
-            BUGGER_OFF: "true"
-
-        - name: Run tests full
-          run: |
-            python3 -m pytest --local --cov-report=xml --cov=./ --hub-cloud --s3 --gcs --azure --gdrive --ignore-glob=buH/*
-          env:
-            GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
-            GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
-            GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-            ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
-            ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-            ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
-            KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-            KAGGLE_KEY: ${{ secrets.kaggle_key }}
-
-        - name: Run backwards compatibility tests
-          run: |
-            pip3 install -e buH
-            sh buH/buh/scripts/create_all.sh
-            pip3 install --upgrade --force-reinstall -e .
-            python3 -m pytest buH/
-          env:
-            ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
-            ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-            ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
-            KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-            KAGGLE_KEY: ${{ secrets.kaggle_key }}
