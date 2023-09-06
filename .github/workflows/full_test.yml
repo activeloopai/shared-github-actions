@@ -131,7 +131,7 @@ jobs:
         id: fast-tests
         timeout-minutes: 15
         run: |
-          coverage run --data-file=fast.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=fast.results.xml --capture=sys -o junit_logging=all -m "not slow and not flaky" --timeout=60  --profile  --pstats-dir=fast.prof
+          coverage run --data-file=fast.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=fast.results.xml --capture=sys -o junit_logging=all -m "not slow and not flaky" --timeout=60
         env:
           DEEPLAKE_PYTEST_ENABLED: true
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
@@ -147,7 +147,7 @@ jobs:
         id: slow-tests
         timeout-minutes: 90
         run: |
-          coverage run --data-file=slow.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=slow.results.xml --capture=sys -o junit_logging=all -m "slow and not flaky" --profile --pstats-dir=slow.prof
+          coverage run --data-file=slow.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=slow.results.xml --capture=sys -o junit_logging=all -m "slow and not flaky"
         env:
           DEEPLAKE_PYTEST_ENABLED: true
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
@@ -159,12 +159,6 @@ jobs:
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
-      - name: Process Results
-        if: always()
-        run: |
-          tar -czf fast.prof.tar.gz fast.prof || true
-          tar -czf slow.prof.tar.gz slow.prof || true
-
       - name: Save Test Results
         uses: actions/upload-artifact@v3
         if: always()
@@ -175,7 +169,6 @@ jobs:
             slow.results.xml
             fast.coverage
             slow.coverage
-            *.prof.tar.gz
 
   flaky-test:
     name: Flaky Tests
@@ -217,7 +210,7 @@ jobs:
           shell: bash
           # Retry seems to only check the last command's exit code, so need to have just one command
           command: |
-            coverage run --data-file=flaky.coverage --omit="test_*.py" -m pytest --local --hub-cloud --s3 --junit-xml=flaky.results.xml --capture=sys -o junit_logging=all -m "flaky" --profile  --pstats-dir=flaky.prof
+            coverage run --data-file=flaky.coverage --omit="test_*.py" -m pytest --local --hub-cloud --s3 --junit-xml=flaky.results.xml --capture=sys -o junit_logging=all -m "flaky"
 
         env:
           DEEPLAKE_PYTEST_ENABLED: true
@@ -230,11 +223,6 @@ jobs:
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
-      - name: Process Results
-        if: always()
-        run: |
-          tar -czf flaky.prof.tar.gz flaky.prof
-
       - name: Save Test Results
         uses: actions/upload-artifact@v3
         if: always()
@@ -243,7 +231,6 @@ jobs:
           path: |
             flaky.results.xml
             flaky.coverage
-            flaky.prof.tar.gz
 
   buh-test:
     name: Backwards Compatibility Test
