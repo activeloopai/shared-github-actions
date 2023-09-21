@@ -145,6 +145,7 @@ jobs:
 
       - name: Run slow tests
         id: slow-tests
+        if: success() || steps.fast-tests.conclusion == 'failure'
         timeout-minutes: 90
         run: |
           coverage run --data-file=slow.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=slow.results.xml --capture=sys -o junit_logging=all -m "slow and not flaky"
