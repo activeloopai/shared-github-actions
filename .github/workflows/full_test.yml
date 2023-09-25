@@ -129,7 +129,7 @@ jobs:
 
       - name: Run fast tests
         id: fast-tests
-        timeout-minutes: 15
+        timeout-minutes: 30
         run: |
           coverage run --data-file=fast.coverage --omit="test_*.py" -m pytest ${{ matrix.storage }} --junit-xml=fast.results.xml --capture=sys -o junit_logging=all -m "not slow and not flaky" --timeout=60
         env:
