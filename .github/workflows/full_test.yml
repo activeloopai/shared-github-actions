@@ -127,6 +127,20 @@ jobs:
           pip3 install --upgrade libdeeplake
           pip3 install -e .[all]
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        env:
+           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
+           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
+           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
+           ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
+           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
+           ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
+           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+        with:
+          limit-access-to-actor: true
+
       - name: Run fast tests
         id: fast-tests
         timeout-minutes: 30
