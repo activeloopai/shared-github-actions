@@ -366,3 +366,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
+
+  notify:
+    needs: [ report ]
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    if: always() && needs.report.result != 'cancelled'
+    steps:
+      - name: Build Failure Slack Notification
+        if: failure() && github.event_name == 'push' && github.head == "refs/heads/main" &&  github.repository_owner == 'activeloopai'
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: deeplake
+          SLACK_MESSAGE: "Deeplake build failed"
+          SLACK_USERNAME: "Tensie"
+          SLACK_FOOTER: ""
+          MSG_MINIMAL: actions url
+          SLACK_ICON_EMOJI: ':warning:'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
