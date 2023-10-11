@@ -288,6 +288,11 @@ jobs:
           du -d 1 -h
           df -h .
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3.16
+        with:
+          limit-access-to-actor: true
+
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
@@ -302,8 +307,8 @@ jobs:
           pip3 install -r deeplake/requirements/tests.txt
           df -h
 
-#          pip3 install -r deeplake/requirements/plugins.txt
-#          df -h
+          pip3 install -r deeplake/requirements/plugins.txt
+          df -h
 
           pip3 install --upgrade libdeeplake
           df -h
