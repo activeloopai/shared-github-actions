@@ -274,17 +274,34 @@ jobs:
         run: |
           df -h
           du -d 1 -h
+          df -h .
 
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
+          df -h
+
           pip3 install --upgrade setuptools
+          df -h
+
           pip3 install -r deeplake/requirements/common.txt
+          df -h
+
           pip3 install -r deeplake/requirements/tests.txt
+          df -h
+
           pip3 install -r deeplake/requirements/plugins.txt
+          df -h
+
           pip3 install --upgrade libdeeplake
+          df -h
+
           pip3 install -e .[all]
+          df -h
+
           pip3 install -e buH
+          df -h
+
 
       - name: Create Datasets
         run: buH/buh/scripts/create_all.sh
