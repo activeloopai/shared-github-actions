@@ -290,9 +290,6 @@ jobs:
           pip3 install -r deeplake/requirements/tests.txt
           df -h
 
-#          pip3 install -r deeplake/requirements/plugins.txt
-#          df -h
-
           pip3 install --upgrade libdeeplake
           df -h
 
