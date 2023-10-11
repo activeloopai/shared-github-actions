@@ -270,6 +270,11 @@ jobs:
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
+      - name: Check disk space
+        run: |
+          df -h
+          du -d 1 -h
+
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
