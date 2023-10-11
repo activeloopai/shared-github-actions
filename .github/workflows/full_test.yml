@@ -235,7 +235,7 @@ jobs:
 
   buh-test:
     name: Backwards Compatibility Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-4
     timeout-minutes: 120
     env:
       BUGGER_OFF: "true"
