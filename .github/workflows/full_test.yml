@@ -27,7 +27,7 @@ on:
         required: true
       hub_token:
         required: true
-      hub_password:
+      hub_username:
         required: true
       kaggle_username:
         required: true
@@ -137,7 +137,6 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
@@ -154,7 +153,6 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
@@ -218,9 +216,8 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
@@ -289,9 +286,8 @@ jobs:
       - name: Run backwards compatibility tests
         run:  python3 -m pytest --junitxml=buh.results.xml --capture=sys -o junit_logging=all buH/
         env:
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
