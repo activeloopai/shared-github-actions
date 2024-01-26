@@ -27,7 +27,7 @@ on:
         required: true
       hub_token:
         required: true
-      hub_password:
+      hub_username:
         required: true
       kaggle_username:
         required: true
