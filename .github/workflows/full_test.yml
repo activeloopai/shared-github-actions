@@ -45,6 +45,8 @@ jobs:
     timeout-minutes: 150
     env:
       BUGGER_OFF: "true"
+      DEEPLAKE_USE_V4: "True"
+
 
     strategy:
       fail-fast: false
@@ -141,6 +143,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          DEEPLAKE_USE_V4: "True"
 
       - name: Run slow tests
         id: slow-tests
@@ -157,6 +160,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          DEEPLAKE_USE_V4: "True"
 
       - name: Save Test Results
         uses: actions/upload-artifact@v3
@@ -174,6 +178,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BUGGER_OFF: "true"
+      DEEPLAKE_USE_V4: "True"
 
     steps:
       - uses: actions/checkout@v3
@@ -220,6 +225,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          DEEPLAKE_USE_V4: "True"
 
       - name: Save Test Results
         uses: actions/upload-artifact@v3
@@ -236,6 +242,7 @@ jobs:
     timeout-minutes: 120
     env:
       BUGGER_OFF: "true"
+      DEEPLAKE_USE_V4: "True"
 
     steps:
       - uses: actions/checkout@v3
@@ -290,6 +297,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          DEEPLAKE_USE_V4: "True"
 
       # With the worked-on dataset plus the original clean, we can run out of disk space by the time we archive the results
       - name: Cleanup Datasets
