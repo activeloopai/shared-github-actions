@@ -25,9 +25,9 @@ on:
         required: true
       oauth_refresh_token:
         required: true
-      hub_username:
+      hub_token:
         required: true
-      hub_password:
+      hub_username:
         required: true
       kaggle_username:
         required: true
@@ -149,9 +149,8 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
@@ -166,9 +165,8 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
@@ -230,9 +228,8 @@ jobs:
           GDRIVE_CLIENT_ID: ${{ secrets.oauth_client_id }}
           GDRIVE_CLIENT_SECRET: ${{ secrets.oauth_client_secret }}
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
@@ -282,6 +279,7 @@ jobs:
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
+<<<<<<< HEAD
       - name: Check disk space
         run: |
           df -h
@@ -293,38 +291,25 @@ jobs:
         with:
           limit-access-to-actor: true
 
+=======
+>>>>>>> 7b4b006d5b8ba28801b42257fa05ad52ebb34cfd
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
-          df -h
-
           pip3 install --upgrade setuptools
-          df -h
-
           pip3 install -r deeplake/requirements/common.txt
-          df -h
-
           pip3 install -r deeplake/requirements/tests.txt
+<<<<<<< HEAD
           df -h
 
           pip3 install -r deeplake/requirements/plugins.txt
           df -h
 
+=======
+>>>>>>> 7b4b006d5b8ba28801b42257fa05ad52ebb34cfd
           pip3 install --upgrade libdeeplake
-          df -h
-
           pip3 install -e .[all]
-          df -h
-
           pip3 install -e buH
-          df -h
-
-      - name: ReCheck disk space
-        if: always()
-        run: |
-          df -h
-          du -d 1 -h
-          df -h .
 
       - name: Create Datasets
         run: buH/buh/scripts/create_all.sh
@@ -335,9 +320,8 @@ jobs:
       - name: Run backwards compatibility tests
         run:  python3 -m pytest --junitxml=buh.results.xml --capture=sys -o junit_logging=all buH/
         env:
-          ENV_HUB_DEV_PASSWORD: ${{ secrets.hub_password }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
-          ACTIVELOOP_HUB_PASSWORD: ${{ secrets.hub_password }}
+          ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
