@@ -279,7 +279,6 @@ jobs:
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
-<<<<<<< HEAD
       - name: Check disk space
         run: |
           df -h
@@ -291,22 +290,12 @@ jobs:
         with:
           limit-access-to-actor: true
 
-=======
->>>>>>> 7b4b006d5b8ba28801b42257fa05ad52ebb34cfd
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
-<<<<<<< HEAD
-          df -h
-
-          pip3 install -r deeplake/requirements/plugins.txt
-          df -h
-
-=======
->>>>>>> 7b4b006d5b8ba28801b42257fa05ad52ebb34cfd
           pip3 install --upgrade libdeeplake
           pip3 install -e .[all]
           pip3 install -e buH
