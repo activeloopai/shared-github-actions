@@ -123,7 +123,8 @@ jobs:
           pip3 install --upgrade setuptools
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
-          pip3 install -e .
+          pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install -e .[all]
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -209,7 +210,6 @@ jobs:
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -r deeplake/requirements/plugins.txt
-          pip3 install --upgrade libdeeplake
           pip3 install -e .[all]
 
       - name: Run flaky tests
@@ -296,7 +296,6 @@ jobs:
           pip3 install --upgrade setuptools
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
-          pip3 install --upgrade libdeeplake
           pip3 install -e .[all]
           pip3 install -e buH
 
