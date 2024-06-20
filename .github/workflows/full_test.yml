@@ -269,7 +269,7 @@ jobs:
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
-          pip3 install numpy<2 # Older versions of deeplake require numpy<2 
+          pip3 install numpy<2 
           pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -e .[all]
