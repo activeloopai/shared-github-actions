@@ -59,12 +59,12 @@ jobs:
           token: ${{ secrets.token }}
           fetch-depth: 0
 
-      # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
-      - name: Cache datasets_clean
-        uses: actions/cache@v3
-        with:
-          path: datasets_clean/*
-          key: buH-datasets-clean
+      # # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
+      # - name: Cache datasets_clean
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: datasets_clean/*
+      #     key: buH-datasets-clean
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -73,17 +73,8 @@ jobs:
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
-      - name: Install Libraries
-        run: |
-          pip3 install --upgrade pip --user
-          pip3 install --upgrade setuptools pytest
-
-      - name: Create Datasets
-        run: buH/buh/scripts/create_all.sh
-
-      - name: Run backwards compatibility tests
-        run:  |
-          bash buh/scripts/test.sh
+      - name: Test
+        run: bash buH/buh/scripts/create_all.sh
         env:
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
