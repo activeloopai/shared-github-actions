@@ -9,9 +9,6 @@ on:
       ref:
         required: true
         type: string
-      testMatrix:
-        type: string
-        required: true
     secrets:
       token:
         required: true
