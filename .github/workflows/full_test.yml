@@ -76,20 +76,14 @@ jobs:
       - name: Install Libraries
         run: |
           pip3 install --upgrade pip --user
-          pip3 install --upgrade setuptools
-          pip3 install -r deeplake/requirements/common.txt
-          pip3 install -r deeplake/requirements/tests.txt
-          pip3 install -e .[all]
-          pip3 install -e buH
+          pip3 install --upgrade setuptools pytest
 
       - name: Create Datasets
         run: buH/buh/scripts/create_all.sh
 
-      - name: Cleanup Libraries
-        run: pip3 install --upgrade --force-reinstall -e .
-
       - name: Run backwards compatibility tests
-        run:  python3 -m pytest --junitxml=buh.results.xml --capture=sys -o junit_logging=all buH/
+        run:  |
+          bash buh/scripts/test.sh
         env:
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
