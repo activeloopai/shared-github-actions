@@ -37,6 +37,8 @@ on:
         required: true
       sonar_token:
         required: false
+      codecov_token:
+        required: true
 
 jobs:
   test:
@@ -355,6 +357,7 @@ jobs:
           files: ./total.coverage.xml
           flags: unittests
           env_vars: OS,PYTHON
+          token: ${{ inputs.codecov_token }}
 
       - name: SonarCloud Scan
         if: env.SONAR_TOKEN != ''
