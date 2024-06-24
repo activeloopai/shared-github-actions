@@ -1,5 +1,9 @@
 name: Deep Lake full tests
 
+permissions:
+  contents: read
+  id-token: write
+
 on:
   workflow_call:
     inputs:
