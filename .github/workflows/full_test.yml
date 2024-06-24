@@ -355,6 +355,7 @@ jobs:
           files: ./total.coverage.xml
           flags: unittests
           env_vars: OS,PYTHON
+          use_oidc: true
 
       - name: SonarCloud Scan
         if: env.SONAR_TOKEN != ''
