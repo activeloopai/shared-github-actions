@@ -41,6 +41,8 @@ on:
         required: true
       sonar_token:
         required: false
+      labelbox_token:
+        required: false
 
 jobs:
   test:
@@ -144,6 +146,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: Run slow tests
         id: slow-tests
@@ -160,6 +163,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: Save Test Results
         uses: actions/upload-artifact@v4.3.3
@@ -222,6 +226,7 @@ jobs:
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
           KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
+          LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: Save Test Results
         uses: actions/upload-artifact@v4.3.3
