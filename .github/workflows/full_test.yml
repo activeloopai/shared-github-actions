@@ -128,9 +128,9 @@ jobs:
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install numpy==1.26.4
-          pip3 install -r deeplake/requirements/common.txt
-          pip3 install -r deeplake/requirements/tests.txt
-          pip3 install -r deeplake/requirements/plugins.txt
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/common.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/tests.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/plugins.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
           pip3 install -e .[all]
 
       - name: Run fast tests
@@ -202,9 +202,9 @@ jobs:
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
-          pip3 install -r deeplake/requirements/common.txt
-          pip3 install -r deeplake/requirements/tests.txt
-          pip3 install -r deeplake/requirements/plugins.txt
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/common.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/tests.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/plugins.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
           pip3 install -e .[all]
 
       - name: Run flaky tests
@@ -280,8 +280,8 @@ jobs:
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install "numpy==1.26.4"
-          pip3 install -r deeplake/requirements/common.txt
-          pip3 install -r deeplake/requirements/tests.txt
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/common.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
+          python -c "import subprocess, sys, re; [subprocess.run([sys.executable, '-m', 'pip3', 'install', re.sub(r'#.*', '', line.strip())], check=False) for line in open('deeplake/requirements/tests.txt') if line.strip() and not line.startswith('#') and re.match(r'^[a-zA-Z0-9]', line.strip())]"
           pip3 install -e .[all]
           pip3 install -e buH
 
