@@ -121,15 +121,6 @@ jobs:
         with:
           creds: ${{ secrets.azure_creds_json }}
 
-      - name: Install requirements
-        run: |
-          pip3 install --upgrade pip --user
-          pip3 install --upgrade setuptools
-          pip3 install -r deeplake/requirements/common.txt
-          pip3 install -r deeplake/requirements/tests.txt
-          pip3 install -r deeplake/requirements/plugins.txt
-          pip3 install -e .[all]
-
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         env:
@@ -142,6 +133,16 @@ jobs:
             KAGGLE_KEY: ${{ secrets.kaggle_key }}
         with:
           limit-access-to-actor: true
+
+
+      - name: Install requirements
+        run: |
+          pip3 install --upgrade pip --user
+          pip3 install --upgrade setuptools
+          pip3 install -r deeplake/requirements/common.txt
+          pip3 install -r deeplake/requirements/tests.txt
+          pip3 install -r deeplake/requirements/plugins.txt
+          pip3 install -e .[all]
 
       - name: Run fast tests
         id: fast-tests
