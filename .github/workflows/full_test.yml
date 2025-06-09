@@ -128,6 +128,7 @@ jobs:
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install numpy==1.26.4
+          pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -r deeplake/requirements/plugins.txt
           pip3 install -e .[all]
@@ -201,6 +202,7 @@ jobs:
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
+          pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -r deeplake/requirements/plugins.txt
           pip3 install -e .[all]
@@ -278,6 +280,7 @@ jobs:
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install "numpy==1.26.4"
+          pip3 install -r deeplake/requirements/common.txt
           pip3 install -r deeplake/requirements/tests.txt
           pip3 install -e .[all]
           pip3 install -e buH
