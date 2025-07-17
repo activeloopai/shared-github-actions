@@ -117,6 +117,12 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
+      - name: Azure login
+        if: contains(matrix.storage, 'azure')
+        uses: Azure/login@v2.3.0
+        with:
+          creds: ${{ secrets.azure_creds_json }}
+
       - name: Install requirements
         run: |
           pip3 install --upgrade pip --user
