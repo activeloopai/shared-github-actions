@@ -276,6 +276,7 @@ jobs:
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
           pip3 install TTS --use-deprecated=legacy-resolver
+          pip3 install "numpy<2.0"
           pip3 install -r deeplake/requirements/common.txt  --use-deprecated=legacy-resolver
           pip3 install -r deeplake/requirements/tests.txt  --use-deprecated=legacy-resolver
           pip3 install -e .[all]
@@ -287,7 +288,7 @@ jobs:
       - name: Cleanup Libraries
         run: |
           pip3 install --upgrade --force-reinstall -e .
-          pip3 install "numpy==1.26.4"
+          pip3 install "numpy<2.0"
 
 
       - name: Run backwards compatibility tests
