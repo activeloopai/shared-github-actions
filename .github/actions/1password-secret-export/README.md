@@ -1,29 +1,28 @@
 # 1Password Secret Export Action
 
-A GitHub Action that securely exports secrets from 1Password vaults to environment variables or `.env` files in GitHub Actions workflows.
+A GitHub Action that securely exports secrets from 1Password to GitHub Actions workflows and optionally to `.env` file.
 
 ## Description
 
-This action uses the 1Password CLI to fetch secrets from a specified vault and item, then makes them available as environment variables in your GitHub Actions workflow or optionally creates a `.env` file. It includes security validations to ensure only allowed item categories are processed.
+This action uses the 1Password CLI to fetch secrets from a specified vault and item, then makes them available as environment variables in your GitHub Actions workflow or optionally creates a `.env` file. Currently only `SECURE_NOTE` item types are supported.
 
 ## Features
 
 - Exports secrets from 1Password vaults to GitHub Actions environment variables
 - Optional creation of `.env` files with exported secrets
 - Support for specific sections within 1Password items
-- Security validation (only allows SECURE_NOTE category items)
-- Error handling with detailed error reporting
+  - merge same values from sections, merge order is the same as section names, at the end it will be merged with root keys
 
 ## Inputs
 
-| Input              | Description                                               | Required | Default            |
-| ------------------ | --------------------------------------------------------- | -------- | ------------------ |
-| `vault`            | 1Password vault name or ID                                | Yes      | -                  |
-| `item`             | 1Password item name or ID                                 | Yes      | -                  |
-| `token`            | 1Password service account token                           | Yes      | -                  |
-| `sections`         | Comma-separated list of 1Password item sections to export | No       | `''` (exports all) |
-| `export_variables` | Export secrets to GitHub Actions environment variables    | No       | `true`             |
-| `create_env_file`  | Create a `.env` file with the secrets                     | No       | `false`            |
+| Input              | Description                                               | Required | Default                       |
+| ------------------ | --------------------------------------------------------- | -------- | ----------------------------- |
+| `vault`            | 1Password vault name or ID                                | Yes      | -                             |
+| `item`             | 1Password item name or ID                                 | Yes      | -                             |
+| `token`            | 1Password service account token                           | Yes      | -                             |
+| `sections`         | Comma-separated list of 1Password item sections to export | No       | `''` (exports only root keys) |
+| `export_variables` | Export secrets to GitHub Actions environment variables    | No       | `true`                        |
+| `export_to_file`   | Whether to create .env file (appends if exist)            | No       | `false`                       |
 
 ## Usage
 
@@ -69,13 +68,6 @@ This action uses the 1Password CLI to fetch secrets from a specified vault and i
 - 1Password item must be of category `SECURE_NOTE`
 - The action automatically installs the 1Password CLI
 
-## Security Considerations
-
-- Only items with category `SECURE_NOTE` are allowed for security reasons
-- Service account tokens should be stored as GitHub encrypted secrets
-- The action uses error handling to prevent sensitive information leakage
-- Fields named `notesPlain` are automatically excluded from export
-
 ## Environment Variables
 
 The action sets the following internal environment variables:
@@ -84,8 +76,8 @@ The action sets the following internal environment variables:
 - `OP_ITEM`: The item name/ID
 - `OP_SERVICE_ACCOUNT_TOKEN`: The service account token
 - `OP_SECTIONS`: The sections to export
-- `OP_EXPORT_ENVIRONMENT_VARIABLES`: Whether to export to env vars
-- `OP_CREATE_DOT_ENV_FILE`: Whether to create .env file
+- `EXPORT_VARIABLES`: Whether to export to env vars
+- `EXPORT_TO_FILE`: Whether to create .env file (appends if exist)
 
 ## Error Handling
 

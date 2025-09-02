@@ -20,7 +20,7 @@ inputs:
     description: export secrets to environment variables
     default: 'true'
     required: false
-  create_env_file:
+  export_to_file:
     description: create a .env file with the secrets
     default: 'false'
     required: false
@@ -39,6 +39,6 @@ runs:
         OP_TOKEN: ${{ inputs.token }}
         OP_SECTIONS: ${{ inputs.sections }}
         EXPORT_VARIABLES: ${{ inputs.export_variables }}
-        CREATE_ENV_FILE: ${{ inputs.create_env_file }}
+        EXPORT_TO_FILE: ${{ inputs.export_to_file }}
       run: |
         ./action.sh

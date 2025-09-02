@@ -17,7 +17,9 @@ setup() {
   : "${OP_VAULT:?OP_VAULT is required}"
   : "${OP_ITEM:?OP_ITEM is required}"
   : "${OP_SERVICE_ACCOUNT_TOKEN:?OP_SERVICE_ACCOUNT_TOKEN is required}"
-  : "${OP_SECTIONS:''}"
+  : "${OP_SECTIONS:-''}"
+  : "${EXPORT_VARIABLES:-true}"
+  : "${EXPORT_TO_FILE:-false}"
 
   declare -gA ALLOWED_CATEGORIES
 
@@ -70,8 +72,8 @@ main() {
   if [ "${EXPORT_VARIABLES}" == "true" ]; then
     yq . -o shell < <(printf "%s" "${result}") >>"${GITHUB_ENV}"
   fi
-  if [ "${CREATE_ENV_FILE}" == "true" ]; then
-    yq . -o shell < <(printf "%s" "${result}") >.env
+  if [ "${EXPORT_TO_FILE}" == "true" ]; then
+    yq . -o shell < <(printf "%s" "${result}") >>.env
   fi
 }
 
