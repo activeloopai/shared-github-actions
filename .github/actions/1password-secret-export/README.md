@@ -58,8 +58,8 @@ This action uses the 1Password CLI to fetch secrets from a specified vault and i
     vault: "development"
     item: "app-secrets"
     token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-    export_environment_variables: "false"
-    create_dot_env_file: "true"
+    export_variables: "false"
+    export_to_file: "true"
 ```
 
 ## Requirements
