@@ -13,6 +13,10 @@ This action uses the 1Password CLI to fetch secrets from a specified vault and i
 - Support for specific sections within 1Password items
   - merge same values from sections, merge order is the same as section names, at the end it will be merged with root keys
 
+## Supported item categories
+
+- secure notes
+
 ## Inputs
 
 | Input              | Description                                               | Required | Default                       |
