@@ -1,9 +1,5 @@
 name: Deeplake tests
 
-permissions:
-  contents: read
-  id-token: write
-
 on:
   workflow_call:
     inputs:
@@ -57,7 +53,6 @@ jobs:
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
-          token: ${{ secrets.token }}
           fetch-depth: 0
 
       - name: set up python ${{ matrix.python-version }}
@@ -72,7 +67,7 @@ jobs:
         uses: federicocarboni/setup-ffmpeg@v3.1
         if: startsWith(runner.os, 'Windows')
         with:
-          github-token: ${{ secrets.token }}
+          github-token: ${{ secrets.github_token }}
 
       - name: setup ffmpeg (linux)
         if: startsWith(runner.os, 'Linux')
@@ -173,9 +168,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v5.0.0
         with:
-          repository: ${{ inputs.repo }}
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.token }}
           fetch-depth: 0
 
       - name: set up python
@@ -235,17 +227,12 @@ jobs:
       - name: checkout
         uses: actions/checkout@v5.0.0
         with:
-          repository: ${{ inputs.repo }}
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.token }}
           fetch-depth: 0
 
       - name: checkout the buH source code
         uses: actions/checkout@v5.0.0
         with:
           path: buH
-          repository: activeloopai/buH
-          token: ${{ secrets.token }}
           fetch-depth: 0
 
       # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
@@ -311,9 +298,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v5.0.0
         with:
-          repository: ${{ inputs.repo }}
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.token }}
           fetch-depth: 0
 
       - name: download test results
