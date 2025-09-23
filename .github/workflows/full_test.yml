@@ -56,7 +56,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(inputs.testMatrix) }}
     steps:
-      - name: Setup
+      - name: setup
         shell: python
         run: |
           import os
@@ -64,32 +64,33 @@ jobs:
           with open(os.environ.get("GITHUB_ENV"), "a") as file:
               file.write("matrix_storage_filename=%s" % "${{ matrix.storage }}".replace(" ","").replace("--", "_")[1:])
 
-      - uses: actions/checkout@v4.2.2
+      - name: checkout
+        uses: actions/checkout@v5.0.0
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.token }}
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.3.0
+      - name: set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
       #### Set up ffmpeg
-      - name: Setup FFmpeg (windows)
+      - name: setup ffmpeg (windows)
         uses: federicocarboni/setup-ffmpeg@v3.1
         if: startsWith(runner.os, 'Windows')
         with:
           github-token: ${{ secrets.token }}
 
-      - name: Setup FFmpeg (linux)
+      - name: setup ffmpeg (linux)
         if: startsWith(runner.os, 'Linux')
         run: sudo apt-get update && sudo apt-get install  -y ffmpeg libavcodec-dev libavformat-dev libswscale-dev libavdevice-dev libavfilter-dev
 
-      - name: Setup FFmpeg (mac)
+      - name: setup ffmpeg (mac)
         if: startsWith(runner.os, 'Mac')
         run: |
           brew install ffmpeg@4
@@ -100,30 +101,30 @@ jobs:
           export PKG_CONFIG_PATH="/usr/local/opt/ffmpeg@4/lib/pkgconfig"
 
       ### Setup authentication/credentials
-      - name: Authenticate (aws)
+      - name: authenticate (aws)
         if: contains(matrix.storage, 's3') || contains(matrix.storage, 's3path')
-        uses: aws-actions/configure-aws-credentials@v4.0.2
+        uses: aws-actions/configure-aws-credentials@v5.0.0
         with:
           role-to-assume: ${{ secrets.aws_role_arn }}
           aws-region: us-east-1
           role-duration-seconds: 21600
           role-session-name: deeplake-${{ github.sha }}
 
-      - name: Authenticate to Google Cloud
+      - name: authenticate (gcp)
         if: contains(matrix.storage, 'gcs')
-        uses: google-github-actions/auth@v2.1.3
+        uses: google-github-actions/auth@v3
         with:
           credentials_json: ${{ secrets.gcp_sa_credentials_json }}
           create_credentials_file: true
           export_environment_variables: true
 
-      - name: Azure login
+      - name: authenticate (gcp)
         if: contains(matrix.storage, 'azure')
         uses: Azure/login@v2.3.0
         with:
           creds: ${{ secrets.azure_creds_json }}
 
-      - name: Install requirements
+      - name: install requirements
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
@@ -134,7 +135,7 @@ jobs:
           pip3 install -r deeplake/requirements/plugins.txt  --use-deprecated=legacy-resolver
           pip3 install -e .[all]
 
-      - name: Run fast tests
+      - name: run fast tests
         id: fast-tests
         timeout-minutes: 30
         run: |
@@ -150,7 +151,7 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
-      - name: Run slow tests
+      - name: run slow tests
         id: slow-tests
         if: success() || steps.fast-tests.conclusion == 'failure'
         timeout-minutes: 120
@@ -167,8 +168,8 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
-      - name: Save Test Results
-        uses: actions/upload-artifact@v4.3.3
+      - name: save test results
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: test-results-py${{ matrix.python-version }}-${{ matrix.os }}-${{ env.matrix_storage_filename }}_${{ github.run_number }}-${{ github.run_attempt }}
@@ -185,21 +186,22 @@ jobs:
       BUGGER_OFF: "true"
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - name: checkout
+        uses: actions/checkout@v5.0.0
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.token }}
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5.3.0
+      - name: set up python
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.10"
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
-      - name: Install requirements
+      - name: install requirements
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
@@ -209,9 +211,9 @@ jobs:
           pip3 install -r deeplake/requirements/plugins.txt  --use-deprecated=legacy-resolver
           pip3 install -e .[all]
 
-      - name: Run flaky tests
+      - name: run flaky tests
         id: flaky-tests
-        uses: nick-fields/retry@v3.0.0
+        uses: nick-fields/retry@v3.0.2
         with:
           timeout_minutes: 20
           max_attempts: 3
@@ -231,8 +233,8 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
-      - name: Save Test Results
-        uses: actions/upload-artifact@v4.3.3
+      - name: save test results
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: test-results-flaky_${{ github.run_number }}-${{ github.run_attempt }}
@@ -248,15 +250,16 @@ jobs:
       BUGGER_OFF: "true"
 
     steps:
-      - uses: actions/checkout@v4.2.2
+      - name: checkout
+        uses: actions/checkout@v5.0.0
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.token }}
           fetch-depth: 0
 
-      - name: Checkout the buH source code
-        uses: actions/checkout@v4.2.2
+      - name: checkout the buH source code
+        uses: actions/checkout@v5.0.0
         with:
           path: buH
           repository: activeloopai/buH
@@ -264,20 +267,20 @@ jobs:
           fetch-depth: 0
 
       # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
-      - name: Cache datasets_clean
-        uses: actions/cache@v4.2.3
+      - name: cache datasets_clean
+        uses: actions/cache@v4.2.4
         with:
           path: datasets_clean/*
           key: buH-datasets-clean
 
-      - name: Set up Python
-        uses: actions/setup-python@v5.3.0
+      - name: set up python
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.10"
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
-      - name: Install Libraries
+      - name: install libraries
         run: |
           pip3 install --upgrade pip --user
           pip3 install --upgrade setuptools
@@ -288,16 +291,16 @@ jobs:
           pip3 install -e .[all]
           pip3 install -e buH
 
-      - name: Create Datasets
+      - name: create datasets
         run: buH/buh/scripts/create_all.sh
 
-      - name: Cleanup Libraries
+      - name: cleanup libraries
         run: |
           pip3 install --upgrade --force-reinstall -e .
           pip3 install "numpy<2.0"
 
 
-      - name: Run backwards compatibility tests
+      - name: run backwards compatibility tests
         run:  python3 -m pytest --junitxml=buh.results.xml --capture=sys -o junit_logging=all buH/
         env:
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
@@ -306,11 +309,11 @@ jobs:
           KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
       # With the worked-on dataset plus the original clean, we can run out of disk space by the time we archive the results
-      - name: Cleanup Datasets
+      - name: cleanup datasets
         run: rm -rf datasets
 
-      - name: Save Test Results
-        uses: actions/upload-artifact@v4.3.3
+      - name: save test results
+        uses: actions/upload-artifact@v4.6.2
         if: always()
         with:
           name: test-results-backwards-compat_${{ github.run_attempt }}
@@ -325,15 +328,16 @@ jobs:
     env:
       BUGGER_OFF: "true"
     steps:
-      - uses: actions/checkout@v4.2.2
+      - name: checkout
+        uses: actions/checkout@v5.0.0
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.token }}
           fetch-depth: 0
 
-      - name: Download Test Results
-        uses: actions/download-artifact@v4.1.7
+      - name: download test results
+        uses: actions/download-artifact@v5.0.0
         with:
           path: results
 
@@ -342,37 +346,37 @@ jobs:
 #        with:
 #          files:  results/test-results-*/*.results.xml
 
-      - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4.3.1
+      - name: publish test report
+        uses: mikepenz/action-junit-report@v5.6.2
         if: always()
         with:
           report_paths: results/test-results-*/*.results.xml
 
-      - name: Set up Python
-        uses: actions/setup-python@v5.3.0
+      - name: set up python
+        uses: actions/setup-python@v6.0.0
         with:
           python-version: "3.10"
           cache: pip
           cache-dependency-path: deeplake/requirements/*.txt
 
-      - name: Merge coverage data
+      - name: merge coverage data
         run: |
           pip3 install coverage[toml]
           find results -name "*.coverage" | xargs python3 -m coverage combine --keep --append --data-file=total.coverage
           python3 -m coverage xml --data-file=total.coverage -o total.coverage.xml
           sed -i 's/coverage.xml/total.coverage.xml/' sonar-project.properties
 
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v4.5.0
+      - name: upload coverage to codecov
+        uses: codecov/codecov-action@v5.5.1
         with:
           files: ./total.coverage.xml
           flags: unittests
           env_vars: OS,PYTHON
           use_oidc: true
 
-      - name: SonarCloud Scan
+      - name: sonarcloud scan
         if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarcloud-github-action@v2.3.0
+        uses: SonarSource/sonarcloud-github-action@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
