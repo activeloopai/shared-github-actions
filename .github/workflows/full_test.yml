@@ -1,4 +1,4 @@
-name: Deep Lake full tests
+name: Deeplake tests
 
 permissions:
   contents: read
@@ -7,18 +7,10 @@ permissions:
 on:
   workflow_call:
     inputs:
-      repo:
-        required: true
-        type: string
-      ref:
-        required: true
-        type: string
       testMatrix:
         type: string
         required: true
     secrets:
-      token:
-        required: true
       aws_role_arn:
         required: true
       gcp_sa_credentials_json:
@@ -32,10 +24,6 @@ on:
       hub_token:
         required: true
       hub_username:
-        required: true
-      kaggle_username:
-        required: true
-      kaggle_key:
         required: true
       azure_creds_json:
         required: true
@@ -147,8 +135,6 @@ jobs:
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
-          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-          KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: run slow tests
@@ -164,8 +150,6 @@ jobs:
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
-          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-          KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: save test results
@@ -229,8 +213,6 @@ jobs:
           GDRIVE_REFRESH_TOKEN: ${{ secrets.oauth_refresh_token }}
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
-          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-          KAGGLE_KEY: ${{ secrets.kaggle_key }}
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: save test results
@@ -305,8 +287,6 @@ jobs:
         env:
           ACTIVELOOP_HUB_USERNAME: ${{ secrets.hub_username }}
           ACTIVELOOP_HUB_TOKEN: ${{ secrets.hub_token }}
-          KAGGLE_USERNAME: ${{ secrets.kaggle_username }}
-          KAGGLE_KEY: ${{ secrets.kaggle_key }}
 
       # With the worked-on dataset plus the original clean, we can run out of disk space by the time we archive the results
       - name: cleanup datasets
@@ -378,5 +358,5 @@ jobs:
         if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarcloud-github-action@v5.0.0
         env:
-          GITHUB_TOKEN: ${{ secrets.token }}
+          GITHUB_TOKEN: ${{ secrets.github_token }}
           SONAR_TOKEN: ${{ secrets.sonar_token }}
