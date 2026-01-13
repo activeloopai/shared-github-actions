@@ -6,7 +6,7 @@ inputs:
     required: true
   build_directory:
     description: project build directory
-    default: "n/a"
+    required: true
 
 runs:
   using: composite
