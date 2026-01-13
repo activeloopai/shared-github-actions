@@ -15,7 +15,7 @@ runs:
       shell: bash
       run: |
         for i in ${{ inputs.source_directory }} ${{ inputs.build_directory }}; do
-          if ! [ -d "$i" ]; then
+          if ! [ -d "$(realpath "$i")" ]; then
             echo "source directory does not exist: ${{ inputs.source_directory }}"
             exit 1
           fi
