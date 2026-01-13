@@ -1,0 +1,33 @@
+name: clang-tidy
+description: run clang-tidy
+inputs:
+  source_directory:
+    description: directory of the project source files
+    required: true
+  build_directory:
+    description: project build directory
+    default: "n/a"
+
+runs:
+  using: composite
+  steps:
+    - name: check
+      shell: bash
+      run: |
+        for i in ${{ inputs.source_directory }} ${{ inputs.build_directory }}; do
+          if ! [ -d "$i" ]; then
+            echo "source directory does not exist: ${{ inputs.source_directory }}"
+            exit 1
+          fi
+        done
+        if ! (clang-tidy --version); then
+          log error "clang-tidy not installed"
+          exit 1
+        fi
+    - name: clang-tidy
+      shell: bash
+      env:
+        SOURCE_DIR: ${{ inputs.source_directory }}
+        BUILD_DIR: ${{ inputs.build_directory }}
+      run: |
+        ${{ github.action_path }}/action.sh "${SOURCE_DIR}" "${BUILD_DIR}"
