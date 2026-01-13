@@ -14,14 +14,6 @@ runs:
     - name: check
       shell: bash
       run: |
-        pwd
-        for i in ${{ inputs.source_directory }} ${{ inputs.build_directory }}; do
-          d="$(realpath "$i")"
-          if ! [ -d "${d}" ]; then
-            echo "source directory does not exist: ${d}"
-            exit 1
-          fi
-        done
         if ! (clang-tidy --version); then
           log error "clang-tidy not installed"
           exit 1
