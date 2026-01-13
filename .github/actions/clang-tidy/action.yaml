@@ -14,6 +14,7 @@ runs:
     - name: check
       shell: bash
       run: |
+        pwd
         for i in ${{ inputs.source_directory }} ${{ inputs.build_directory }}; do
           d="$(realpath "$i")"
           if ! [ -d "${d}" ]; then
