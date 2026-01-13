@@ -24,3 +24,7 @@ runs:
         SOURCE_DIR: ${{ inputs.source_directory }}
         BUILD_DIR: ${{ inputs.build_directory }}
       run: ${{ github.action_path }}/action.sh "${SOURCE_DIR}" "${BUILD_DIR}"
+
+branding:
+  icon: "terminal"
+  color: "black"
