@@ -34,7 +34,7 @@ log info "source directory: ${SOURCE_DIR}"
 log info "build directory: ${BUILD_DIR}"
 
 if [ ! -f "${BUILD_DIR}/compile_commands.json" ]; then
-  log error "compile_commands.json not found in ${BUILD_DIR}, please build the project first to generate compile_commands.json"
+  log error "${BUILD_DIR}/compile_commands.json not found , please build the project first to generate compile_commands.json"
   exit 1
 fi
 
