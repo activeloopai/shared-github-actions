@@ -44,7 +44,7 @@ if ! (clang-tidy --version); then
   exit 1
 fi
 
-log info "running clang-tidy"
+log info "running clang-tidy, build=${BUILD_DIR} source=${SOURCE_DIR}"
 
 WORKER_COUNT="$(nproc)"
 for file in *.cpp; do
