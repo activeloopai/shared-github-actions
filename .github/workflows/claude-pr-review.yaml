@@ -1,0 +1,76 @@
+name: Claude PR Review
+
+on:
+  workflow_call:
+    inputs:
+      review_prompt:
+        description: Extra instructions for the review (optional).
+        required: false
+        type: string
+        default: None
+    secrets:
+      OP_SERVICE_ACCOUNT_TOKEN:
+        required: true
+
+concurrency:
+  group: ${{ github.repository }}-claude-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v6.0.1
+        with:
+          fetch-depth: 1
+
+      - name: load 1pass
+        id: load-1pass
+        uses: 1password/load-secrets-action@v3.1.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: "${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}"
+          ANTHROPIC_API_KEY: "op://GitHub Actions/common/CLAUDE_API_KEY"
+
+      - name: pr review
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: "${{ steps.load-1pass.outputs.ANTHROPIC_API_KEY }}"
+          track_progress: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are an automated PR reviewer:
+            - Prefer INLINE review comments with actionable fixes.
+            - Avoid long PR summaries.
+            - Only comment when you are confident it's a real issue (bug, security, error handling, correctness, tests).
+            - Ignore style nitpicks unless they cause bugs or security risks.
+
+            OUTPUT RULES (IMPORTANT):
+            1) Default output: INLINE COMMENTS ONLY using mcp__github_inline_comment__create_inline_comment.
+            2) Each inline comment must be compact:
+               - 1 sentence: what's wrong + why it matters
+               - 1 sentence: recommended fix
+               - If possible include a GitHub suggestion block:
+                 ```suggestion
+                 <exact replacement code>
+                 ```
+            3) Only if you found >= 2 significant issues, leave ONE short top-level PR comment (<= 4 bullets).
+               Otherwise: do not leave a top-level comment.
+
+            PROCESS:
+            - Use `gh pr view` to read PR title/body.
+            - Use `gh pr diff` to inspect changes.
+            - Place inline comments directly on the relevant lines.
+            - Do NOT restate large diff chunks.
+
+            Extra instructions (optional):
+            ${{ inputs.review_prompt }}
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
