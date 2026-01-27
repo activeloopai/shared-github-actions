@@ -75,10 +75,10 @@ jobs:
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr diff:*),Bash(gh pr view:*)"
 
-      - name: delete workflow run
-        if: always()
-        uses: mattraks/delete-workflow-runs@v2.1.0
-        with:
-          token: "${{ github.token }}"
-          repository: "${{ github.repository }}"
-          delete_workflow_pattern: pr-review
+      # - name: delete workflow run
+      #   if: always()
+      #   uses: mattraks/delete-workflow-runs@v2.1.0
+      #   with:
+      #     token: "${{ github.token }}"
+      #     repository: "${{ github.repository }}"
+      #     delete_workflow_pattern: pr-review
