@@ -81,4 +81,4 @@ jobs:
         with:
           token: "${{ github.token }}"
           repository: "${{ github.repository }}"
-          delete_workflow_pattern: claude_review
+          delete_workflow_pattern: pr-review
