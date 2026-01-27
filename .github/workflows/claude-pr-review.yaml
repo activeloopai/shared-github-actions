@@ -42,6 +42,7 @@ jobs:
         with:
           anthropic_api_key: "${{ steps.load-1pass.outputs.ANTHROPIC_API_KEY }}"
           track_progress: true
+          use_sticky_comment: true
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
