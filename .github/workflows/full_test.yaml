@@ -49,14 +49,14 @@ jobs:
               file.write("matrix_storage_filename=%s" % "${{ matrix.storage }}".replace(" ","").replace("--", "_")[1:])
 
       - name: checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
       - name: set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -86,7 +86,7 @@ jobs:
       ### Setup authentication/credentials
       - name: authenticate (aws)
         if: contains(matrix.storage, 's3') || contains(matrix.storage, 's3path')
-        uses: aws-actions/configure-aws-credentials@v5.0.0
+        uses: aws-actions/configure-aws-credentials@v6.1.1
         with:
           role-to-assume: ${{ secrets.aws_role_arn }}
           aws-region: us-east-1
@@ -103,7 +103,7 @@ jobs:
 
       - name: authenticate (gcp)
         if: contains(matrix.storage, 'azure')
-        uses: Azure/login@v2.3.0
+        uses: Azure/login@v3.0.0
         with:
           creds: ${{ secrets.azure_creds_json }}
 
@@ -148,7 +148,7 @@ jobs:
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: save test results
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: test-results-py${{ matrix.python-version }}-${{ matrix.os }}-${{ env.matrix_storage_filename }}_${{ github.run_number }}-${{ github.run_attempt }}
@@ -166,12 +166,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: set up python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.10"
           cache: pip
@@ -189,7 +189,7 @@ jobs:
 
       - name: run flaky tests
         id: flaky-tests
-        uses: nick-fields/retry@v3.0.2
+        uses: nick-fields/retry@v4.0.0
         with:
           timeout_minutes: 20
           max_attempts: 3
@@ -208,7 +208,7 @@ jobs:
           LABELBOX_TOKEN: ${{ secrets.labelbox_token }}
 
       - name: save test results
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: test-results-flaky_${{ github.run_number }}-${{ github.run_attempt }}
@@ -225,12 +225,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: checkout the buH source code
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           path: buH
           repository: activeloopai/buH
@@ -238,13 +238,13 @@ jobs:
 
       # This will slowly get behind as new versions are released that are not in the cache. The cache can be dropped through the github UI when creation takes too long
       - name: cache datasets_clean
-        uses: actions/cache@v4.2.4
+        uses: actions/cache@v5.0.5
         with:
           path: datasets_clean/*
           key: buH-datasets-clean
 
       - name: set up python
-        uses: actions/setup-python@v6.0.0
+        uses: actions/setup-python@v6.2.0
         with:
           python-version: "3.10"
           cache: pip
@@ -281,7 +281,7 @@ jobs:
         run: rm -rf datasets
 
       - name: save test results
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: test-results-backwards-compat_${{ github.run_attempt }}
@@ -297,12 +297,12 @@ jobs:
       BUGGER_OFF: "true"
     steps:
       - name: checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
 
       - name: download test results
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v8.0.1
         with:
           path: results
 
@@ -312,13 +312,13 @@ jobs:
 #          files:  results/test-results-*/*.results.xml
 
       - name: publish test report
-        uses: mikepenz/action-junit-report@v5.6.2
+        uses: mikepenz/action-junit-report@v6.4.1
         if: always()
         with:
           report_paths: results/test-results-*/*.results.xml
 
       # - name: set up python
-      #   uses: actions/setup-python@v6.0.0
+      #   uses: actions/setup-python@v6.2.0
       #   with:
       #     python-version: "3.10"
       #     cache: pip
@@ -332,7 +332,7 @@ jobs:
           sed -i 's/coverage.xml/total.coverage.xml/' sonar-project.properties
 
       - name: upload coverage to codecov
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v6.0.1
         with:
           files: ./total.coverage.xml
           flags: unittests
